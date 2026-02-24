@@ -1,337 +1,355 @@
----
-title: Quickstart
-description: Find out how to use Cal "atoms" to integrate scheduling into your product.
-"icon": "rocket"
----
-
-## 1. Setting up an OAuth client
-
-Once your account is created, the next step is to create an OAuth client. This allows you to connect your users to Cal and handle their scheduling with atoms.
-
-1. After logging in using provided credentials, open OAuth clients settings page [https://app.cal.com/settings/platform/oauth-clients/create](https://app.cal.com/settings/platform/oauth-clients/create)
-2. Add an OAuth client.
-    1. Name: anything is fine. You can use your company name or your website.
-    2. Redirect URIs: Used to validate origin of requests - your website's URLs from which atoms are allowed to make requests to our API. Supports wildcard syntax where "*" would support any origin, and "*app.com" would support "example.app.com", and "https//example.com*" where it would support any origin from that domain.
-    3. Booking, reschedule and cancel URLs: URLs of pages where users land after a successful booking or if they want to reschedule or cancel a booking. We will pass information in the URL when redirecting to your pages and you will use our hooks and components to implement the pages. See [this guide](/platform/guides/booking-redirects).
-    4. Permissions - most likely you need all enabled:
-        1. Event type: event type is a user event that others can book. For example, Alice is a language teacher and she has an event type “30 minutes Italian lesson” that others can then book.
-        2. Booking: When Bob books the Italian lesson, a booking is created and shows up on the calendar that Alice connected using atoms.
-        3. Schedule: used to represent when a user is available. From what to what time and when can an event type be booked. For example, Alice only can be booked for the Italian lessons on Mondays and Tuesdays from 9AM to 4PM.
-        4. Profile: When you proceed to the chapter 2, you will create your users on our end, so that we can manage their scheduling. Profile permissions allow to either read or update users you create on our end.
-        5. Apps: used to connect Google Calendar, Zoom, Microsoft Teams, etc. to atoms.
-
-## 2. Creating managed users connected to the OAuth client
-
-In order for atoms to handle scheduling on behalf of your users, you have to create what we call a “managed user” for each of your users.
-
-#### What is a “Managed user”?
-It is a representation of your user within our database containing basic information like email and is used to manage the setup of Google Calendar.
-After creating a “managed user” you will receive the user ID, an access and a refresh token that are used by atoms to handle scheduling and can be used to modify the “managed user” information, so make sure to store the tokens and the [cal.com](https://cal.com) user ID in your database. Also, you will have to connect each user on your end with the access and refresh tokens by adding new properties on your User model in database that store the tokens, for example.
-
-#### What is it not?
-It's important to clarify that a "managed user" is completely independent of a regular user account on cal.com, meaning you don't need your users to register on cal.com web application.
-
-❗Managed users do not get a public cal.com page like normal cal.com users do aka if you create a managed user the managed user won't have cal.com/managed-user page, because the point of platform solution is to integrate scheduling into your platform,
-so instead the managed user public page will be at your-platform.com/managed-user and there you fetch event types of the managed user using our api or react hooks and display them.
-
-### Create managed users via our API
-
-We now need the OAuth client’s “client ID” and “client secret” that you can find in [https://app.cal.com/settings/organizations/platform/oauth-clients](https://app.cal.com/settings/organizations/platform/oauth-clients).
-
-You have to make a POST request to [https://api.cal.com/v2/oauth-clients/YOUR_CLIENT_ID/users](https://api.cal.com/v2/oauth-clients/:clientId/users):
-
-1. Replace “YOUR_CLIENT_ID” in the URL with your “client ID”.
-2. Add "x-cal-secret-key” header with the value of your “client secret”.
-3. Add the request body containing an object to create the “managed user” with the following properties:
-    1. email: required, your user's email.
-    2. name: optional, full name of your user.
-    3. timeFormat: optional, value can be either 12 or 24 with 12 representing 12 hour time using AM and PM and 24 representing 24 hour time without AM and PM.
-    4. weekStart: optional, value can be “Monday”, “Tuesday”, “Wednesday”, “Thursday”, “Friday”, “Saturday”, “Sunday”. If none passed, "Sunday” is used as the default. Countries in North and South America start their week on Sunday while countries in Europe and Oceania on Monday.
-    5. timeZone: optional, in the format of “IANA timezone” e.g. “Europe/Rome”. If none passed, "Europe/London” is used as the default.
-
-#### Example request
-
-URL: https://api.cal.com/v2/oauth-clients/7Dcxu2fclb10001kha9x1dreyl4/users
-
-Headers: ```{ "x-cal-secret-key”: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX}```
-
-Body:
-
-```js
-{
-    "email": "bob@example.com",
-    "timeZone": "America/New_York"
-}
-```
-
-
-#### Example response
-
-```js
-{
-  "status": "success",
-  "data": {
-    "user": {
-      "id": 179,
-      "email": "bob@example.com",
-      "username": "bob"
-    },
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoiYWNjZXNzX3Rva2VuIiwiY2xpZW50SWQiOiJjbHUxZmNtYjEwMDAxa2hyN3g3ZHJleWw0Iiwib3duZXJJZCI6MTc5LCJpYXQiOjE3MTE0NDI3OTR9.EsC3JRPHQnigcp_HSijKCIp8EgcWs2kj4AFxYXYc9sM",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0eXBlIjoicmVmcmVzaF90b2tlbiIsImNsaWVudElkIjoiY2x1MWZjbWIxMDAwMWtocjd4N2RyZXlsNCIsIm93bmVySWQiOjE3OSwiaWF0IjoxNzExNDQyNzk0fQ.GjklEucgey8yWMoGz7ABntbxYdiqqQFPooQjqGd3B5I"
-  }
-}
-```
-
-First, make sure to store the user ID, access and refresh tokens in your database and connect them to each user. For example, you can add “calAtomsAccessToken” and “calAtomsRefreshToken” properties to your user database model.
-
-You will be able to provide an access token to our atoms so that they can handle scheduling on behalf of the user associated with the token. Access tokens expires, so you will have to refresh them using the refresh token.
-
-Second, if `timeZone` is passed in the request, the user's default schedule from 9AM to 5PM will be created in the specified timezone. Then, using the `AvailabilitySettings` atom, user can customize their availability. However,
-if the `timeZone` is not passed,  then user has no default schedule and user can't be booked and user can't set availability using the `AvailabilitySettings` atom. You will have to set it up manually via the `/schedules` endpoints.
-We recommend setting the `timeZone` for ease of use.
-
-## 3. Backend: setting up a refresh token endpoint
-
-You have to set up an endpoint on your server to which atoms can send an expired access token and receive new one in return. This exchange will be automatically handled by atoms when you provide this endpoint URL when setting up frontend in the next step.
-
-> Q: Why do we need a separate endpoint just for this?
-A: Your OAuth client secret and users refresh tokens should never be exposed on the frontend. The OAuth client secret will reside as an environment variable in your backend and the users' refresh tokens are stored in your database, which are used by our API to refresh the access token.
->
-
-You can check an example refresh token endpoint in our atoms examples app: [https://github.com/calcom/atoms-examples/blob/main/cal-sync/src/pages/api/refresh.ts](https://github.com/calcom/atoms-examples/blob/main/cal-sync/src/pages/api/refresh.ts)
-
-Shortly:
-
-1. Set up environment variables or pass values directly. Here are ones from the examples app above:
-    1. NEXT_PUBLIC_CALCOM_API_URL: [https://api.cal.com/v2](https://api.cal.com/v2)
-    2. NEXT_PUBLIC_X_CAL_ID: your OAuth client ID
-    3. X_CAL_SECRET_KEY - your OAuth client secret
-2. Your endpoint will receive a request from atoms.
-3. Make it a GET endpoint to which “Authorization: Bearer accessToken” header can be sent to.
-4. Assuming you have stored the access and refresh tokens in your database and connected them to a specific user, fetch the user based on the received access token.
-5. Provide the OAuth client ID, client secret and managed user refresh token to the [`/refresh`](https://cal.com/docs/api-reference/v2/platform-managed-users/refresh-managed-user-tokens) endpoint.
-6. Store in your database access and refresh tokens returned by the [`/refresh`](https://cal.com/docs/api-reference/v2/platform-managed-users/refresh-managed-user-tokens) endpoint.
-7. Return access token to the request. It should be in the format of:
-  ```js
-  { accessToken: "fresh access token" }
-  ```
-
-The atoms will now use the new access token to handle scheduling on behalf of your user. Access token expires after 60 minutes and atoms
-then will make a request to your refresh token endpoint to get a new access token while also refreshing the refresh token.
-
-## 4. Managing refresh token expiry
-
-Each refresh token is valid for 1 year. When a managed user's access token is refreshed, the refresh token is refreshed too.
-However, to make sure that refresh tokens do not expire for less active users you have 2 options:
-1. If you decode the refresh token there is `expiresAt` date (it is a jwt token so you can decode it using some library from npm). You could have a cron job that checks all of your users refresh tokens and sees if the refresh token
-is about to expire, then refresh tokens using the [`/refresh`](https://cal.com/docs/api-reference/v2/platform-managed-users/refresh-managed-user-tokens) endpoint.
-2. In the refresh endpoint you built in the [previous step](https://cal.com/docs/platform/quickstart#4-backend%3A-setting-up-a-refresh-token-endpoint) you could have a check that if the call to [`/refresh`](https://cal.com/docs/api-reference/v2/platform-managed-users/refresh-managed-user-tokens) fails meaning that the
-refresh token has expired, call the [`/force-refresh`](https://cal.com/docs/api-reference/v2/platform-managed-users/force-refresh-tokens) endpoint - it allows you to refresh managed user tokens
-using only the OAuth client ID and client secret and is intended to be used in cases when one of the tokens is lost or the refresh token is expired.
-
-## 5. Frontend: setting up atoms
-
-Atoms are customizable UI components handling scheduling on behalf of your users.
-
-### 5.1 Install the atoms package
-
-npm:
-
-```jsx
-npm install @calcom/atoms
-```
-
-yarn:
-
-```jsx
-yarn add @calcom/atoms
-```
-
-pnpm:
-
-```jsx
-pnpm add @calcom/atoms
-```
-
-### 5.2 Set up environment variables
-
-CAL_OAUTH_CLIENT_ID: OAuth client ID
-
-CAL_API_URL: [https://api.cal.com/v2](https://api.cal.com/v2)
-
-REFRESH_URL:  URL of the endpoint you implemented in step 3, for example, your.api.com/api/refresh
-
-### 5.3 Set up root of your app
-
-Next.js: open _app.js or or _app.tsx.
-
-React: open App.js or App.ts.
-
-First, import global css styles used by atoms.
-
-```js
-import "@calcom/atoms/globals.min.css";
-
-function MyApp({ Component, pageProps }) {
-  return (
-    <Component {...pageProps} />
-  );
-}
-
-export default MyApp;
-```
-
-Second, import CalProvider that provides necessary information to atoms and wrap your components with it.
-
-```js
-import "@calcom/atoms/globals.min.css";
-import { CalProvider } from '@calcom/atoms';
-
-function MyApp({ Component, pageProps }) {
-  return (
-    <CalProvider
-      clientId={process.env.CAL_OAUTH_CLIENT_ID ?? ""}
-      options={{
-        apiUrl: process.env.CAL_API_URL ?? "",
-        refreshUrl: process.env.REFRESH_URL
-      }}
-    >
-      <Component {...pageProps} />
-    </CalProvider>
-  );
-}
-
-export default MyApp;
-```
-
-Third, CalProvider needs to get access token of the user for which atoms will handle scheduling, so you need to fetch user and provide its access token to the CalProvider.
-
-```js
-import "@calcom/atoms/globals.min.css";
-import { CalProvider } from '@calcom/atoms';
-
-function MyApp({ Component, pageProps }) {
-  const [accessToken, setAccessToken] = useState("");
-
-  useEffect(() => {
-    fetch(`/api/users/${pageProps.userId}`, {
-    }).then(async (res) => {
-      const data = await res.json();
-      setAccessToken(data.accessToken);
-    });
-  }, []);
-
-  return (
-    <CalProvider
-      accessToken={accessToken}
-      clientId={process.env.CAL_OAUTH_CLIENT_ID ?? ""}
-      options={{
-        apiUrl: process.env.CAL_API_URL ?? "",
-        refreshUrl: "/api/refresh"
-      }}
-    >
-      <Component {...pageProps} />
-    </CalProvider>
-  );
-}
-
-export default MyApp;
-```
-
-## 6. Frontend: using atoms
-
-It’s very easy, just import the atom and drop it in code! For example, for users to connect their Google Calendar drop in "Connect.GoogleCalendar" component - it will handle everything.
-
-```js
-import { Connect } from "@calcom/atoms";
-
-...
-export default function Connect() {
-  return (
-    <main>
-	    <Connect.GoogleCalendar />
-    </main>
-  );
-}
-```
-
-If you need to customize the appearance of any atom, you can pass in custom css styles via a className prop that every atom has:
-
-```js
-<Connect.GoogleCalendar className="text-white hover:bg-orange-700" />
-```
-
-other more complex atoms will expose multiple classNames and props to react to events happening in the atoms
-
-```js
-<AvailabilitySettings
-  customClassNames={{
-    subtitlesClassName: "text-red-500",
-    ctaClassName: "border p-4 rounded-md",
-    editableHeadingClassName: "underline font-semibold",
-  }}
-  onUpdateSuccess={() => {
-    console.log("Updated successfully");
-  }}
-  onUpdateError={() => {
-    console.log("update error");
-  }}
-  onDeleteError={() => {
-    console.log("delete error");
-  }}
-  onDeleteSuccess={() => {
-    console.log("Deleted successfully");
-  }}
-/>;
-```
-
-## 7. Front-end: passing additional props to CalProvider
-
-The CalProvider component offers several additional props to customize its behavior and appearance:
-1. autoUpdateTimezone: By default, the atoms automatically update the user's timezone. You can disable this feature by setting autoUpdateTimezone to false.
-2. onTimezoneChange: If you want to perform specific actions whenever the user's timezone changes, you can provide a callback function to the onTimezoneChange prop.
-3. children: You can pass in custom child components to be rendered within the CalProvider.
-4. version: Specify the API version that the atoms should use by setting the version prop.
-5. language: Set the language for the atoms by providing a supported locale (es, fr, de, en, pt-BR) to the language prop.
-6. labels: Override specific labels in the atoms by passing an object of custom labels to the labels prop.
-
-```js
-import "@calcom/atoms/globals.min.css";
-import { CalProvider } from '@calcom/atoms';
-
-function MyApp({ Component, pageProps }) {
-  const [accessToken, setAccessToken] = useState("");
-
-  useEffect(() => {
-    fetch(`/api/users/${pageProps.userId}`, {
-    }).then(async (res) => {
-      const data = await res.json();
-      setAccessToken(data.accessToken);
-    });
-  }, []);
-
-  return (
-    <CalProvider
-      accessToken={accessToken}
-      clientId={process.env.CAL_OAUTH_CLIENT_ID ?? ""}
-      options={{
-        apiUrl: process.env.CAL_API_URL ?? "",
-        refreshUrl: "/api/refresh"
-      }}
-      language="fr"
-      labels={{
-        date_overrides: "Omlette du Fromage!"
-      }}
-      autoUpdateTimezone={false}
-      onTimezoneChange={() => {
-        console.log("Timezone changed successfully")
-      }}
-      children={<>This is the child component</>}
-    >
-      <Component {...pageProps} />
-    </CalProvider>
-  );
-}
-
-export default MyApp;
-```
+LS0tCnRpdGxlOiBRdWlja3N0YXJ0CmRlc2NyaXB0aW9uOiBGaW5kIG91dCBo
+b3cgdG8gdXNlIENhbCAiYXRvbXMiIHRvIGludGVncmF0ZSBzY2hlZHVsaW5n
+IGludG8geW91ciBwcm9kdWN0LgoiaWNvbiI6ICJyb2NrZXQiCi0tLQoKIyMg
+MS4gU2V0dGluZyB1cCBhbiBPQXV0aCBjbGllbnQKCk9uY2UgeW91ciBhY2Nv
+dW50IGlzIGNyZWF0ZWQsIHRoZSBuZXh0IHN0ZXAgaXMgdG8gY3JlYXRlIGFu
+IE9BdXRoIGNsaWVudC4gVGhpcyBhbGxvd3MgeW91IHRvIGNvbm5lY3QgeW91
+ciB1c2VycyB0byBDYWwgYW5kIGhhbmRsZSB0aGVpciBzY2hlZHVsaW5nIHdp
+dGggYXRvbXMuCgoxLiBBZnRlciBsb2dnaW5nIGluIHVzaW5nIHByb3ZpZGVk
+IGNyZWRlbnRpYWxzLCBvcGVuIE9BdXRoIGNsaWVudHMgc2V0dGluZ3MgcGFn
+ZSBbaHR0cHM6Ly9hcHAuY2FsLmNvbS9zZXR0aW5ncy9wbGF0Zm9ybS9vYXV0
+aC1jbGllbnRzL2NyZWF0ZV0oaHR0cHM6Ly9hcHAuY2FsLmNvbS9zZXR0aW5n
+cy9wbGF0Zm9ybS9vYXV0aC1jbGllbnRzL2NyZWF0ZSkKMi4gQWRkIGFuIE9B
+dXRoIGNsaWVudC4KICAgIDEuIE5hbWU6IGFueXRoaW5nIGlzIGZpbmUuIFlv
+dSBjYW4gdXNlIHlvdXIgY29tcGFueSBuYW1lIG9yIHlvdXIgd2Vic2l0ZS4K
+ICAgIDIuIFJlZGlyZWN0IFVSSXM6IFVzZWQgdG8gdmFsaWRhdGUgb3JpZ2lu
+IG9mIHJlcXVlc3RzIC0geW91ciB3ZWJzaXRlJ3MgVVJMcyBmcm9tIHdoaWNo
+IGF0b21zIGFyZSBhbGxvd2VkIHRvIG1ha2UgcmVxdWVzdHMgdG8gb3VyIEFQ
+SS4gU3VwcG9ydHMgd2lsZGNhcmQgc3ludGF4IHdoZXJlICIqIiB3b3VsZCBz
+dXBwb3J0IGFueSBvcmlnaW4sIGFuZCAiKmFwcC5jb20iIHdvdWxkIHN1cHBv
+cnQgImV4YW1wbGUuYXBwLmNvbSIsIGFuZCAiaHR0cHMvL2V4YW1wbGUuY29t
+KiIgd2hlcmUgaXQgd291bGQgc3VwcG9ydCBhbnkgb3JpZ2luIGZyb20gdGhh
+dCBkb21haW4uCiAgICAzLiBCb29raW5nLCByZXNjaGVkdWxlIGFuZCBjYW5j
+ZWwgVVJMczogVVJMcyBvZiBwYWdlcyB3aGVyZSB1c2VycyBsYW5kIGFmdGVy
+IGEgc3VjY2Vzc2Z1bCBib29raW5nIG9yIGlmIHRoZXkgd2FudCB0byByZXNj
+aGVkdWxlIG9yIGNhbmNlbCBhIGJvb2tpbmcuIFdlIHdpbGwgcGFzcyBpbmZv
+cm1hdGlvbiBpbiB0aGUgVVJMIHdoZW4gcmVkaXJlY3RpbmcgdG8geW91ciBw
+YWdlcyBhbmQgeW91IHdpbGwgdXNlIG91ciBob29rcyBhbmQgY29tcG9uZW50
+cyB0byBpbXBsZW1lbnQgdGhlIHBhZ2VzLiBTZWUgW3RoaXMgZ3VpZGVdKC9w
+bGF0Zm9ybS9ndWlkZXMvYm9va2luZy1yZWRpcmVjdHMpLgogICAgNC4gUGVy
+bWlzc2lvbnMgLSBtb3N0IGxpa2VseSB5b3UgbmVlZCBhbGwgZW5hYmxlZDoK
+ICAgICAgICAxLiBFdmVudCB0eXBlOiBldmVudCB0eXBlIGlzIGEgdXNlciBl
+dmVudCB0aGF0IG90aGVycyBjYW4gYm9vay4gRm9yIGV4YW1wbGUsIEFsaWNl
+IGlzIGEgbGFuZ3VhZ2UgdGVhY2hlciBhbmQgc2hlIGhhcyBhbiBldmVudCB0
+eXBlIOKAnDMwIG1pbnV0ZXMgSXRhbGlhbiBsZXNzb27igJ0gdGhhdCBvdGhl
+cnMgY2FuIHRoZW4gYm9vay4KICAgICAgICAyLiBCb29raW5nOiBXaGVuIEJv
+YiBib29rcyB0aGUgSXRhbGlhbiBsZXNzb24sIGEgYm9va2luZyBpcyBjcmVh
+dGVkIGFuZCBzaG93cyB1cCBvbiB0aGUgY2FsZW5kYXIgdGhhdCBBbGljZSBj
+b25uZWN0ZWQgdXNpbmcgYXRvbXMuCiAgICAgICAgMy4gU2NoZWR1bGU6IHVz
+ZWQgdG8gcmVwcmVzZW50IHdoZW4gYSB1c2VyIGlzIGF2YWlsYWJsZS4gRnJv
+bSB3aGF0IHRvIHdoYXQgdGltZSBhbmQgd2hlbiBjYW4gYW4gZXZlbnQgdHlw
+ZSBiZSBib29rZWQuIEZvciBleGFtcGxlLCBBbGljZSBvbmx5IGNhbiBiZSBi
+b29rZWQgZm9yIHRoZSBJdGFsaWFuIGxlc3NvbnMgb24gTW9uZGF5cyBhbmQg
+VHVlc2RheXMgZnJvbSA5QU0gdG8gNFBNLgogICAgICAgIDQuIFByb2ZpbGU6
+IFdoZW4geW91IHByb2NlZWQgdG8gdGhlIGNoYXB0ZXIgMiwgeW91IHdpbGwg
+Y3JlYXRlIHlvdXIgdXNlcnMgb24gb3VyIGVuZCwgc28gdGhhdCB3ZSBjYW4g
+bWFuYWdlIHRoZWlyIHNjaGVkdWxpbmcuIFByb2ZpbGUgcGVybWlzc2lvbnMg
+YWxsb3cgdG8gZWl0aGVyIHJlYWQgb3IgdXBkYXRlIHVzZXJzIHlvdSBjcmVh
+dGUgb24gb3VyIGVuZC4KICAgICAgICA1LiBBcHBzOiB1c2VkIHRvIGNvbm5l
+Y3QgR29vZ2xlIENhbGVuZGFyLCBab29tLCBNaWNyb3NvZnQgVGVhbXMsIGV0
+Yy4gdG8gYXRvbXMuCgojIyAyLiBDcmVhdGluZyBtYW5hZ2VkIHVzZXJzIGNv
+bm5lY3RlZCB0byB0aGUgT0F1dGggY2xpZW50CgpJbiBvcmRlciBmb3IgYXRv
+bXMgdG8gaGFuZGxlIHNjaGVkdWxpbmcgb24gYmVoYWxmIG9mIHlvdXIgdXNl
+cnMsIHlvdSBoYXZlIHRvIGNyZWF0ZSB3aGF0IHdlIGNhbGwgYSDigJxtYW5h
+Z2VkIHVzZXLigJ0gZm9yIGVhY2ggb2YgeW91ciB1c2Vycy4KCiMjIyMgV2hh
+dCBpcyBhIOKAnE1hbmFnZWQgdXNlcuKAnT8KSXQgaXMgYSByZXByZXNlbnRh
+dGlvbiBvZiB5b3VyIHVzZXIgd2l0aGluIG91ciBkYXRhYmFzZSBjb250YWlu
+aW5nIGJhc2ljIGluZm9ybWF0aW9uIGxpa2UgZW1haWwgYW5kIGlzIHVzZWQg
+dG8gbWFuYWdlIHRoZSBzZXR1cCBvZiBHb29nbGUgQ2FsZW5kYXIuCkFmdGVy
+IGNyZWF0aW5nIGEg4oCcbWFuYWdlZCB1c2Vy4oCdIHlvdSB3aWxsIHJlY2Vp
+dmUgdGhlIHVzZXIgSUQsIGFuIGFjY2VzcyBhbmQgYSByZWZyZXNoIHRva2Vu
+IHRoYXQgYXJlIHVzZWQgYnkgYXRvbXMgdG8gaGFuZGxlIHNjaGVkdWxpbmcg
+YW5kIGNhbiBiZSB1c2VkIHRvIG1vZGlmeSB0aGUg4oCcbWFuYWdlZCB1c2Vy
+4oCdIGluZm9ybWF0aW9uLCBzbyBtYWtlIHN1cmUgdG8gc3RvcmUgdGhlIHRv
+a2VucyBhbmQgdGhlIFtjYWwuY29tXShodHRwczovL2NhbC5jb20pIHVzZXIg
+SUQgaW4geW91ciBkYXRhYmFzZS4gQWxzbywgeW91IHdpbGwgaGF2ZSB0byBj
+b25uZWN0IGVhY2ggdXNlciBvbiB5b3VyIGVuZCB3aXRoIHRoZSBhY2Nlc3Mg
+YW5kIHJlZnJlc2ggdG9rZW5zIGJ5IGFkZGluZyBuZXcgcHJvcGVydGllcyBv
+biB5b3VyIFVzZXIgbW9kZWwgaW4gZGF0YWJhc2UgdGhhdCBzdG9yZSB0aGUg
+dG9rZW5zLCBmb3IgZXhhbXBsZS4KCiMjIyMgV2hhdCBpcyBpdCBub3Q/Ckl0
+J3MgaW1wb3J0YW50IHRvIGNsYXJpZnkgdGhhdCBhICJtYW5hZ2VkIHVzZXIi
+IGlzIGNvbXBsZXRlbHkgaW5kZXBlbmRlbnQgb2YgYSByZWd1bGFyIHVzZXIg
+YWNjb3VudCBvbiBjYWwuY29tLCBtZWFuaW5nIHlvdSBkb24ndCBuZWVkIHlv
+dXIgdXNlcnMgdG8gcmVnaXN0ZXIgb24gY2FsLmNvbSB3ZWIgYXBwbGljYXRp
+b24uCgrinZdNYW5hZ2VkIHVzZXJzIGRvIG5vdCBnZXQgYSBwdWJsaWMgY2Fs
+LmNvbSBwYWdlIGxpa2Ugbm9ybWFsIGNhbC5jb20gdXNlcnMgZG8gYWthIGlm
+IHlvdSBjcmVhdGUgYSBtYW5hZ2VkIHVzZXIgdGhlIG1hbmFnZWQgdXNlciB3
+b24ndCBoYXZlIGNhbC5jb20vbWFuYWdlZC11c2VyIHBhZ2UsIGJlY2F1c2Ug
+dGhlIHBvaW50IG9mIHBsYXRmb3JtIHNvbHV0aW9uIGlzIHRvIGludGVncmF0
+ZSBzY2hlZHVsaW5nIGludG8geW91ciBwbGF0Zm9ybSwKc28gaW5zdGVhZCB0
+aGUgbWFuYWdlZCB1c2VyIHB1YmxpYyBwYWdlIHdpbGwgYmUgYXQgeW91ci1w
+bGF0Zm9ybS5jb20vbWFuYWdlZC11c2VyIGFuZCB0aGVyZSB5b3UgZmV0Y2gg
+ZXZlbnQgdHlwZXMgb2YgdGhlIG1hbmFnZWQgdXNlciB1c2luZyBvdXIgYXBp
+IG9yIHJlYWN0IGhvb2tzIGFuZCBkaXNwbGF5IHRoZW0uCgojIyMgQ3JlYXRl
+IG1hbmFnZWQgdXNlcnMgdmlhIG91ciBBUEkKCldlIG5vdyBuZWVkIHRoZSBP
+QXV0aCBjbGllbnTigJlzIOKAnGNsaWVudCBJROKAnSBhbmQg4oCcY2xpZW50
+IHNlY3JldOKAnSB0aGF0IHlvdSBjYW4gZmluZCBpbiBbaHR0cHM6Ly9hcHAu
+Y2FsLmNvbS9zZXR0aW5ncy9vcmdhbml6YXRpb25zL3BsYXRmb3JtL29hdXRo
+LWNsaWVudHNdKGh0dHBzOi8vYXBwLmNhbC5jb20vc2V0dGluZ3Mvb3JnYW5p
+emF0aW9ucy9wbGF0Zm9ybS9vYXV0aC1jbGllbnRzKS4KCllvdSBoYXZlIHRv
+IG1ha2UgYSBQT1NUIHJlcXVlc3QgdG8gW2h0dHBzOi8vYXBpLmNhbC5jb20v
+djIvb2F1dGgtY2xpZW50cy9ZT1VSX0NMSUVOVF9JRC91c2Vyc10oaHR0cHM6
+Ly9hcGkuY2FsLmNvbS92Mi9vYXV0aC1jbGllbnRzLzpjbGllbnRJZC91c2Vy
+cyk6CgoxLiBSZXBsYWNlIOKAnFlPVVJfQ0xJRU5UX0lE4oCdIGluIHRoZSBV
+Ukwgd2l0aCB5b3VyIOKAnGNsaWVudCBJROKAnS4KMi4gQWRkICJ4LWNhbC1z
+ZWNyZXQta2V54oCdIGhlYWRlciB3aXRoIHRoZSB2YWx1ZSBvZiB5b3VyIOKA
+nGNsaWVudCBzZWNyZXTigJ0uCjMuIEFkZCB0aGUgcmVxdWVzdCBib2R5IGNv
+bnRhaW5pbmcgYW4gb2JqZWN0IHRvIGNyZWF0ZSB0aGUg4oCcbWFuYWdlZCB1
+c2Vy4oCdIHdpdGggdGhlIGZvbGxvd2luZyBwcm9wZXJ0aWVzOgogICAgMS4g
+ZW1haWw6IHJlcXVpcmVkLCB5b3VyIHVzZXIncyBlbWFpbC4KICAgIDIuIG5h
+bWU6IG9wdGlvbmFsLCBmdWxsIG5hbWUgb2YgeW91ciB1c2VyLgogICAgMy4g
+dGltZUZvcm1hdDogb3B0aW9uYWwsIHZhbHVlIGNhbiBiZSBlaXRoZXIgMTIg
+b3IgMjQgd2l0aCAxMiByZXByZXNlbnRpbmcgMTIgaG91ciB0aW1lIHVzaW5n
+IEFNIGFuZCBQTSBhbmQgMjQgcmVwcmVzZW50aW5nIDI0IGhvdXIgdGltZSB3
+aXRob3V0IEFNIGFuZCBQTS4KICAgIDQuIHdlZWtTdGFydDogb3B0aW9uYWws
+IHZhbHVlIGNhbiBiZSDigJxNb25kYXnigJ0sIOKAnFR1ZXNkYXnigJ0sIOKA
+nFdlZG5lc2RheeKAnSwg4oCcVGh1cnNkYXnigJ0sIOKAnEZyaWRheeKAnSwg
+4oCcU2F0dXJkYXnigJ0sIOKAnFN1bmRheeKAnS4gSWYgbm9uZSBwYXNzZWQs
+ICJTdW5kYXnigJ0gaXMgdXNlZCBhcyB0aGUgZGVmYXVsdC4gQ291bnRyaWVz
+IGluIE5vcnRoIGFuZCBTb3V0aCBBbWVyaWNhIHN0YXJ0IHRoZWlyIHdlZWsg
+b24gU3VuZGF5IHdoaWxlIGNvdW50cmllcyBpbiBFdXJvcGUgYW5kIE9jZWFu
+aWEgb24gTW9uZGF5LgogICAgNS4gdGltZVpvbmU6IG9wdGlvbmFsLCBpbiB0
+aGUgZm9ybWF0IG9mIOKAnElBTkEgdGltZXpvbmXigJ0gZS5nLiDigJxFdXJv
+cGUvUm9tZeKAnS4gSWYgbm9uZSBwYXNzZWQsICJFdXJvcGUvTG9uZG9u4oCd
+IGlzIHVzZWQgYXMgdGhlIGRlZmF1bHQuCgojIyMjIEV4YW1wbGUgcmVxdWVz
+dAoKVVJMOiBodHRwczovL2FwaS5jYWwuY29tL3YyL29hdXRoLWNsaWVudHMv
+N0RjeHUyZmNsYjEwMDAxa2hhOXgxZHJleWw0L3VzZXJzCgpIZWFkZXJzOiBg
+YGB7ICJ4LWNhbC1zZWNyZXQta2V54oCdOiBleUpoYkdjaU9pSklVekkxTmlJ
+c0luUjVjQ0k2SWtwWH1gYGAKCkJvZHk6CgpgYGBqcwp7CiAgICAiZW1haWwi
+OiAiYm9iQGV4YW1wbGUuY29tIiwKICAgICJ0aW1lWm9uZSI6ICJBbWVyaWNh
+L05ld19Zb3JrIgp9CmBgYAoKCiMjIyMgRXhhbXBsZSByZXNwb25zZQoKYGBg
+anMKewogICJzdGF0dXMiOiAic3VjY2VzcyIsCiAgImRhdGEiOiB7CiAgICAi
+dXNlciI6IHsKICAgICAgImlkIjogMTc5LAogICAgICAiZW1haWwiOiAiYm9i
+QGV4YW1wbGUuY29tIiwKICAgICAgInVzZXJuYW1lIjogImJvYiIKICAgIH0s
+CiAgICAiYWNjZXNzVG9rZW4iOiAiZXlKaGJHY2lPaUpJVXpJMU5pSXNJblI1
+Y0NJNklrcFhWQ0o5LmV5SjBlWEJsSWpvaVlXTmpaWE56WDNSdmEyVnVJaXdp
+WTJ4cFpXNTBTV1FpT2lKamJIVXhabU50WWpFd01EQXhhMmh5TjNnM1pISmxl
+V3cwSWl3aWIzZHVaWEpKWkNJNk1UYzVMQ0pwWVhRaU9qRTNNVEUwTkRJM09U
+UjkuRXNDM0pSUEhRbmlnY3BfSFNpaktDSXA4RWdjV3Mya2o0QUZ4WVhZYzlz
+TSIsCiAgICAicmVmcmVzaFRva2VuIjogImV5SmhiR2NpT2lKSVV6STFOaUlz
+SW5SNWNDSTZJa3BYVkNKOS5leUowZVhCbElqb2ljbVZtY21WemFGOTBiMnRs
+YmlJc0ltTnNhV1Z1ZEVsa0lqb2lZMngxTVdaamJXSXhNREF3TVd0b2NqZDRO
+MlJ5Wlhsc05DSXNJbTkzYm1WeVNXUWlPakUzT1N3aWFXRjBJam94TnpFeE5E
+UXlOemswZlEuR2prbEV1Y2dleTh5V01vR3o3QUJudGJ4WWRpcXFRRlBvb1Fq
+cUdkM0I1SSIKICB9Cn0KYGBgCgpGaXJzdCwgbWFrZSBzdXJlIHRvIHN0b3Jl
+IHRoZSB1c2VyIElELCBhY2Nlc3MgYW5kIHJlZnJlc2ggdG9rZW5zIGluIHlv
+dXIgZGF0YWJhc2UgYW5kIGNvbm5lY3QgdGhlbSB0byBlYWNoIHVzZXIuIEZv
+ciBleGFtcGxlLCB5b3UgY2FuIGFkZCDigJxjYWxBdG9tc0FjY2Vzc1Rva2Vu
+4oCdIGFuZCDigJxjYWxBdG9tc1JlZnJlc2hUb2tlbuKAnSBwcm9wZXJ0aWVz
+IHRvIHlvdXIgdXNlciBkYXRhYmFzZSBtb2RlbC4KCllvdSB3aWxsIGJlIGFi
+bGUgdG8gcHJvdmlkZSBhbiBhY2Nlc3MgdG9rZW4gdG8gb3VyIGF0b21zIHNv
+IHRoYXQgdGhleSBjYW4gaGFuZGxlIHNjaGVkdWxpbmcgb24gYmVoYWxmIG9m
+IHRoZSB1c2VyIGFzc29jaWF0ZWQgd2l0aCB0aGUgdG9rZW4uIEFjY2VzcyB0
+b2tlbnMgZXhwaXJlcywgc28geW91IHdpbGwgaGF2ZSB0byByZWZyZXNoIHRo
+ZW0gdXNpbmcgdGhlIHJlZnJlc2ggdG9rZW4uCgpTZWNvbmQsIGlmIGB0aW1l
+Wm9uZWAgaXMgcGFzc2VkIGluIHRoZSByZXF1ZXN0LCB0aGUgdXNlcidzIGRl
+ZmF1bHQgc2NoZWR1bGUgZnJvbSA5QU0gdG8gNVBNIHdpbGwgYmUgY3JlYXRl
+ZCBpbiB0aGUgc3BlY2lmaWVkIHRpbWV6b25lLiBUaGVuLCB1c2luZyB0aGUg
+YEF2YWlsYWJpbGl0eVNldHRpbmdzYCBhdG9tLCB1c2VyIGNhbiBjdXN0b21p
+emUgdGhlaXIgYXZhaWxhYmlsaXR5LiBIb3dldmVyLAppZiB0aGUgYHRpbWVa
+b25lYCBpcyBub3QgcGFzc2VkLCAgdGhlbiB1c2VyIGhhcyBubyBkZWZhdWx0
+IHNjaGVkdWxlIGFuZCB1c2VyIGNhbid0IGJlIGJvb2tlZCBhbmQgdXNlciBj
+YW4ndCBzZXQgYXZhaWxhYmlsaXR5IHVzaW5nIHRoZSBgQXZhaWxhYmlsaXR5
+U2V0dGluZ3NgIGF0b20uIFlvdSB3aWxsIGhhdmUgdG8gc2V0IGl0IHVwIG1h
+bnVhbGx5IHZpYSB0aGUgYC9zY2hlZHVsZXNgIGVuZHBvaW50cy4KV2UgcmVj
+b21tZW5kIHNldHRpbmcgdGhlIGB0aW1lWm9uZWAgZm9yIGVhc2Ugb2YgdXNl
+LgoKIyMgMy4gQmFja2VuZDogc2V0dGluZyB1cCBhIHJlZnJlc2ggdG9rZW4g
+ZW5kcG9pbnQKCllvdSBoYXZlIHRvIHNldCB1cCBhbiBlbmRwb2ludCBvbiB5
+b3VyIHNlcnZlciB0byB3aGljaCBhdG9tcyBjYW4gc2VuZCBhbiBleHBpcmVk
+IGFjY2VzcyB0b2tlbiBhbmQgcmVjZWl2ZSBuZXcgb25lIGluIHJldHVybi4g
+VGhpcyBleGNoYW5nZSB3aWxsIGJlIGF1dG9tYXRpY2FsbHkgaGFuZGxlZCBi
+eSBhdG9tcyB3aGVuIHlvdSBwcm92aWRlIHRoaXMgZW5kcG9pbnQgVVJMIHdo
+ZW4gc2V0dGluZyB1cCBmcm9udGVuZCBpbiB0aGUgbmV4dCBzdGVwLgoKPiBR
+OiBXaHkgZG8gd2UgbmVlZCBhIHNlcGFyYXRlIGVuZHBvaW50IGp1c3QgZm9y
+IHRoaXM/CkE6IFlvdXIgT0F1dGggY2xpZW50IHNlY3JldCBhbmQgdXNlcnMg
+cmVmcmVzaCB0b2tlbnMgc2hvdWxkIG5ldmVyIGJlIGV4cG9zZWQgb24gdGhl
+IGZyb250ZW5kLiBUaGUgT0F1dGggY2xpZW50IHNlY3JldCB3aWxsIHJlc2lk
+ZSBhcyBhbiBlbnZpcm9ubWVudCB2YXJpYWJsZSBpbiB5b3VyIGJhY2tlbmQg
+YW5kIHRoZSB1c2VycycgcmVmcmVzaCB0b2tlbnMgYXJlIHN0b3JlZCBpbiB5
+b3VyIGRhdGFiYXNlLCB3aGljaCBhcmUgdXNlZCBieSBvdXIgQVBJIHRvIHJl
+ZnJlc2ggdGhlIGFjY2VzcyB0b2tlbi4KPgoKWW91IGNhbiBjaGVjayBhbiBl
+eGFtcGxlIHJlZnJlc2ggdG9rZW4gZW5kcG9pbnQgaW4gb3VyIGF0b21zIGV4
+YW1wbGVzIGFwcDogW2h0dHBzOi8vZ2l0aHViLmNvbS9jYWxjb20vYXRvbXMt
+ZXhhbXBsZXMvYmxvYi9tYWluL2NhbC1zeW5jL3NyYy9wYWdlcy9hcGkvcmVm
+cmVzaC50c10oaHR0cHM6Ly9naXRodWIuY29tL2NhbGNvbS9hdG9tcy1leGFt
+cGxlcy9ibG9iL21haW4vY2FsLXN5bmMvc3JjL3BhZ2VzL2FwaS9yZWZyZXNo
+LnRzKQoKU2hvcnRseToKCjEuIFNldCB1cCBlbnZpcm9ubWVudCB2YXJpYWJs
+ZXMgb3IgcGFzcyB2YWx1ZXMgZGlyZWN0bHkuIEhlcmUgYXJlIG9uZXMgZnJv
+bSB0aGUgZXhhbXBsZXMgYXBwIGFib3ZlOgogICAgMS4gTkVYVF9QVUJMSUNf
+Q0FMQ09NX0FQSV9VUkw6IFtodHRwczovL2FwaS5jYWwuY29tL3YyXShodHRw
+czovL2FwaS5jYWwuY29tL3YyKQogICAgMi4gTkVYVF9QVUJMSUNfWF9DQUxf
+SUQ6IHlvdXIgT0F1dGggY2xpZW50IElECiAgICAzLiBYX0NBTF9TRUNSRVRf
+S0VZIC0geW91ciBPQXV0aCBjbGllbnQgc2VjcmV0CjIuIFlvdXIgZW5kcG9p
+bnQgd2lsbCByZWNlaXZlIGEgcmVxdWVzdCBmcm9tIGF0b21zLgozLiBNYWtl
+IGl0IGEgR0VUIGVuZHBvaW50IHRvIHdoaWNoIOKAnEF1dGhvcml6YXRpb246
+IEJlYXJlciBhY2Nlc3NUb2tlbuKAnSBoZWFkZXIgY2FuIGJlIHNlbnQgdG8u
+CjQuIEFzc3VtaW5nIHlvdSBoYXZlIHN0b3JlZCB0aGUgYWNjZXNzIGFuZCBy
+ZWZyZXNoIHRva2VucyBpbiB5b3VyIGRhdGFiYXNlIGFuZCBjb25uZWN0ZWQg
+dGhlbSB0byBhIHNwZWNpZmljIHVzZXIsIGZldGNoIHRoZSB1c2VyIGJhc2Vk
+IG9uIHRoZSByZWNlaXZlZCBhY2Nlc3MgdG9rZW4uCjUuIFByb3ZpZGUgdGhl
+IE9BdXRoIGNsaWVudCBJRCwgY2xpZW50IHNlY3JldCBhbmQgbWFuYWdlZCB1
+c2VyIHJlZnJlc2ggdG9rZW4gdG8gdGhlIFtgL3JlZnJlc2hgXShodHRwczov
+L2NhbC5jb20vZG9jcy9hcGktcmVmZXJlbmNlL3YyL3BsYXRmb3JtLW1hbmFn
+ZWQtdXNlcnMvcmVmcmVzaC1tYW5hZ2VkLXVzZXItdG9rZW5zKSBlbmRwb2lu
+dC4KNi4gU3RvcmUgaW4geW91ciBkYXRhYmFzZSBhY2Nlc3MgYW5kIHJlZnJl
+c2ggdG9rZW5zIHJldHVybmVkIGJ5IHRoZSBbYC9yZWZyZXNoYF0oaHR0cHM6
+Ly9jYWwuY29tL2RvY3MvYXBpLXJlZmVyZW5jZS92Mi9wbGF0Zm9ybS1tYW5h
+Z2VkLXVzZXJzL3JlZnJlc2gtbWFuYWdlZC11c2VyLXRva2VucykgZW5kcG9p
+bnQuCjcuIFJldHVybiBhY2Nlc3MgdG9rZW4gdG8gdGhlIHJlcXVlc3QuIEl0
+IHNob3VsZCBiZSBpbiB0aGUgZm9ybWF0IG9mOgogIGBgYGpzCiAgeyBhY2Nl
+c3NUb2tlbjogImZyZXNoIGFjY2VzcyB0b2tlbiIgfQogIGBgYAoKVGhlIGF0
+b21zIHdpbGwgbm93IHVzZSB0aGUgbmV3IGFjY2VzcyB0b2tlbiB0byBoYW5k
+bGUgc2NoZWR1bGluZyBvbiBiZWhhbGYgb2YgeW91ciB1c2VyLiBBY2Nlc3Mg
+dG9rZW4gZXhwaXJlcyBhZnRlciA2MCBtaW51dGVzIGFuZCBhdG9tcwp0aGVu
+IHdpbGwgbWFrZSBhIHJlcXVlc3QgdG8geW91ciByZWZyZXNoIHRva2VuIGVu
+ZHBvaW50IHRvIGdldCBhIG5ldyBhY2Nlc3MgdG9rZW4gd2hpbGUgYWxzbyBy
+ZWZyZXNoaW5nIHRoZSByZWZyZXNoIHRva2VuLgoKIyMgNC4gTWFuYWdpbmcg
+cmVmcmVzaCB0b2tlbiBleHBpcnkKCkVhY2ggcmVmcmVzaCB0b2tlbiBpcyB2
+YWxpZCBmb3IgMSB5ZWFyLiBXaGVuIGEgbWFuYWdlZCB1c2VyJ3MgYWNjZXNz
+IHRva2VuIGlzIHJlZnJlc2hlZCwgdGhlIHJlZnJlc2ggdG9rZW4gaXMgcmVm
+cmVzaGVkIHRvby4KSG93ZXZlciwgdG8gbWFrZSBzdXJlIHRoYXQgcmVmcmVz
+aCB0b2tlbnMgZG8gbm90IGV4cGlyZSBmb3IgbGVzcyBhY3RpdmUgdXNlcnMg
+eW91IGhhdmUgMiBvcHRpb25zOgoxLiBJZiB5b3UgZGVjb2RlIHRoZSByZWZy
+ZXNoIHRva2VuIHRoZXJlIGlzIGBleHBpcmVzQXRgIGRhdGUgKGl0IGlzIGEg
+and0IHRva2VuIHNvIHlvdSBjYW4gZGVjb2RlIGl0IHVzaW5nIHNvbWUgbGli
+cmFyeSBmcm9tIG5wbSkuIFlvdSBjb3VsZCBoYXZlIGEgY3JvbiBqb2IgdGhh
+dCBjaGVja3MgYWxsIG9mIHlvdXIgdXNlcnMgcmVmcmVzaCB0b2tlbnMgYW5k
+IHNlZXMgaWYgdGhlIHJlZnJlc2ggdG9rZW4KaXMgYWJvdXQgdG8gZXhwaXJl
+LCB0aGVuIHJlZnJlc2ggdG9rZW5zIHVzaW5nIHRoZSBbYC9yZWZyZXNoYF0o
+aHR0cHM6Ly9jYWwuY29tL2RvY3MvYXBpLXJlZmVyZW5jZS92Mi9wbGF0Zm9y
+bS1tYW5hZ2VkLXVzZXJzL3JlZnJlc2gtbWFuYWdlZC11c2VyLXRva2Vucykg
+ZW5kcG9pbnQuCjIuIEluIHRoZSByZWZyZXNoIGVuZHBvaW50IHlvdSBidWls
+dCBpbiB0aGUgW3ByZXZpb3VzIHN0ZXBdKGh0dHBzOi8vY2FsLmNvbS9kb2Nz
+L3BsYXRmb3JtL3F1aWNrc3RhcnQjNC1iYWNrZW5kJTNBLXNldHRpbmctdXAt
+YS1yZWZyZXNoLXRva2VuLWVuZHBvaW50KSB5b3UgY291bGQgaGF2ZSBhIGNo
+ZWNrIHRoYXQgaWYgdGhlIGNhbGwgdG8gW2AvcmVmcmVzaGBdKGh0dHBzOi8v
+Y2FsLmNvbS9kb2NzL2FwaS1yZWZlcmVuY2UvdjIvcGxhdGZvcm0tbWFuYWdl
+ZC11c2Vycy9yZWZyZXNoLW1hbmFnZWQtdXNlci10b2tlbnMpIGZhaWxzIG1l
+YW5pbmcgdGhhdCB0aGUKcmVmcmVzaCB0b2tlbiBoYXMgZXhwaXJlZCwgY2Fs
+bCB0aGUgW2AvZm9yY2UtcmVmcmVzaGBdKGh0dHBzOi8vY2FsLmNvbS9kb2Nz
+L2FwaS1yZWZlcmVuY2UvdjIvcGxhdGZvcm0tbWFuYWdlZC11c2Vycy9mb3Jj
+ZS1yZWZyZXNoLXRva2VucykgZW5kcG9pbnQgLSBpdCBhbGxvd3MgeW91IHRv
+IHJlZnJlc2ggbWFuYWdlZCB1c2VyIHRva2Vucwp1c2luZyBvbmx5IHRoZSBP
+QXV0aCBjbGllbnQgSUQgYW5kIGNsaWVudCBzZWNyZXQgYW5kIGlzIGludGVu
+ZGVkIHRvIGJlIHVzZWQgaW4gY2FzZXMgd2hlbiBvbmUgb2YgdGhlIHRva2Vu
+cyBpcyBsb3N0IG9yIHRoZSByZWZyZXNoIHRva2VuIGlzIGV4cGlyZWQuCgoj
+IyA1LiBGcm9udGVuZDogc2V0dGluZyB1cCBhdG9tcwoKQXRvbXMgYXJlIGN1
+c3RvbWl6YWJsZSBVSSBjb21wb25lbnRzIGhhbmRsaW5nIHNjaGVkdWxpbmcg
+b24gYmVoYWxmIG9mIHlvdXIgdXNlcnMuCgojIyMgNS4xIEluc3RhbGwgdGhl
+IGF0b21zIHBhY2thZ2UKCm5wbToKCmBgYGpzeApucG0gaW5zdGFsbCBAY2Fs
+Y29tL2F0b21zCmBgYAoKeWFybjoKCmBgYGpzeAp5YXJuIGFkZCBAY2FsY29t
+L2F0b21zCmBgYAoKcG5wbToKCmBgYGpzeApwbnBtIGFkZCBAY2FsY29tL2F0
+b21zCmBgYAoKIyMjIDUuMiBTZXQgdXAgZW52aXJvbm1lbnQgdmFyaWFibGVz
+CgpDQUxfT0FVVEhfQ0xJRU5UX0lEOiBPQXV0aCBjbGllbnQgSUQKCkNBTF9B
+UElfVVJMOiBbaHR0cHM6Ly9hcGkuY2FsLmNvbS92Ml0oaHR0cHM6Ly9hcGku
+Y2FsLmNvbS92MikKClJFRlJFU0hfVVJMOiAgVVJMIG9mIHRoZSBlbmRwb2lu
+dCB5b3UgaW1wbGVtZW50ZWQgaW4gc3RlcCAzLCBmb3IgZXhhbXBsZSwgeW91
+ci5hcGkuY29tL2FwaS9yZWZyZXNoCgojIyMgNS4zIFNldCB1cCByb290IG9m
+IHlvdXIgYXBwCgpOZXh0LmpzOiBvcGVuIF9hcHAuanMgb3Igb3IgX2FwcC50
+c3guCgpSZWFjdDogb3BlbiBBcHAuanMgb3IgQXBwLnRzLgoKRmlyc3QsIGlt
+cG9ydCBnbG9iYWwgY3NzIHN0eWxlcyB1c2VkIGJ5IGF0b21zLgoKYGBganMK
+aW1wb3J0ICJAY2FsY29tL2F0b21zL2dsb2JhbHMubWluLmNzcyI7CgpmdW5j
+dGlvbiBNeUFwcCh7IENvbXBvbmVudCwgcGFnZVByb3BzIH0pIHsKICByZXR1
+cm4gKAogICAgPENvbXBvbmVudCB7Li4ucGFnZVByb3BzfSAvPgogICk7Cn0K
+CmV4cG9ydCBkZWZhdWx0IE15QXBwOwpgYGAKClNlY29uZCwgaW1wb3J0IENh
+bFByb3ZpZGVyIHRoYXQgcHJvdmlkZXMgbmVjZXNzYXJ5IGluZm9ybWF0aW9u
+IHRvIGF0b21zIGFuZCB3cmFwIHlvdXIgY29tcG9uZW50cyB3aXRoIGl0LgoK
+YGBganMKaW1wb3J0ICJAY2FsY29tL2F0b21zL2dsb2JhbHMubWluLmNzcyI7
+CmltcG9ydCB7IENhbFByb3ZpZGVyIH0gZnJvbSAnQGNhbGNvbS9hdG9tcyc7
+CgpmdW5jdGlvbiBNeUFwcCh7IENvbXBvbmVudCwgcGFnZVByb3BzIH0pIHsK
+ICByZXR1cm4gKAogICAgPENhbFByb3ZpZGVyCiAgICAgIGNsaWVudElkPXtw
+cm9jZXNzLmVudi5DQUxfT0FVVEhfQ0xJRU5UX0lEID8/ICIifQogICAgICBv
+cHRpb25zPXt7CiAgICAgICAgYXBpVXJsOiBwcm9jZXNzLmVudi5DQUxfQVBJ
+X1VSTCA/PyAiIiwKICAgICAgICByZWZyZXNoVXJsOiBwcm9jZXNzLmVudi5S
+RUZSRVNIX1VSTAogICAgICB9fQogICAgPgogICAgICA8Q29tcG9uZW50IHsu
+Li5wYWdlUHJvcHN9IC8+CiAgICA8L0NhbFByb3ZpZGVyPgogICk7Cn0KCmV4
+cG9ydCBkZWZhdWx0IE15QXBwOwpgYGAKClRoaXJkLCBDYWxQcm92aWRlciBu
+ZWVkcyB0byBnZXQgYWNjZXNzIHRva2VuIG9mIHRoZSB1c2VyIGZvciB3aGlj
+aCBhdG9tcyB3aWxsIGhhbmRsZSBzY2hlZHVsaW5nLCBzbyB5b3UgbmVlZCB0
+byBmZXRjaCB1c2VyIGFuZCBwcm92aWRlIGl0cyBhY2Nlc3MgdG9rZW4gdG8g
+dGhlIENhbFByb3ZpZGVyLgoKYGBganMKaW1wb3J0ICJAY2FsY29tL2F0b21z
+L2dsb2JhbHMubWluLmNzcyI7CmltcG9ydCB7IENhbFByb3ZpZGVyIH0gZnJv
+bSAnQGNhbGNvbS9hdG9tcyc7CgpmdW5jdGlvbiBNeUFwcCh7IENvbXBvbmVu
+dCwgcGFnZVByb3BzIH0pIHsKICBjb25zdCBbYWNjZXNzVG9rZW4sIHNldEFj
+Y2Vzc1Rva2VuXSA9IHVzZVN0YXRlKCIiKTsKCiAgdXNlRWZmZWN0KCgpID0+
+IHsKICAgIGZldGNoKGAvYXBpL3VzZXJzLyR7cGFnZVByb3BzLnVzZXJJZH1g
+LCB7CiAgICB9KS50aGVuKGFzeW5jIChyZXMpID0+IHsKICAgICAgY29uc3Qg
+ZGF0YSA9IGF3YWl0IHJlcy5qc29uKCk7CiAgICAgIHNldEFjY2Vzc1Rva2Vu
+KGRhdGEuYWNjZXNzVG9rZW4pOwogICAgfSk7CiAgfSwgW10pOwoKICByZXR1
+cm4gKAogICAgPENhbFByb3ZpZGVyCiAgICAgIGFjY2Vzc1Rva2VuPXthY2Nl
+c3NUb2tlbn0KICAgICAgY2xpZW50SWQ9e3Byb2Nlc3MuZW52LkNBTF9PQVVU
+SF9DTElFTlRfSUQgPz8gIiJ9CiAgICAgIG9wdGlvbnM9e3sKICAgICAgICBh
+cGlVcmw6IHByb2Nlc3MuZW52LkNBTF9BUElfVVJMID8/ICIiLAogICAgICAg
+IHJlZnJlc2hVcmw6ICIvYXBpL3JlZnJlc2giCiAgICAgIH19CiAgICA+CiAg
+ICAgIDxDb21wb25lbnQgey4uLnBhZ2VQcm9wc30gLz4KICAgIDwvQ2FsUHJv
+dmlkZXI+CiAgKTsKfQoKZXhwb3J0IGRlZmF1bHQgTXlBcHA7CmBgYAoKIyMg
+Ni4gRnJvbnRlbmQ6IHVzaW5nIGF0b21zCgpJdOKAmXMgdmVyeSBlYXN5LCBq
+dXN0IGltcG9ydCB0aGUgYXRvbSBhbmQgZHJvcCBpdCBpbiBjb2RlISBGb3Ig
+ZXhhbXBsZSwgZm9yIHVzZXJzIHRvIGNvbm5lY3QgdGhlaXIgR29vZ2xlIENh
+bGVuZGFyIGRyb3AgaW4gIkNvbm5lY3QuR29vZ2xlQ2FsZW5kYXIiIGNvbXBv
+bmVudCAtIGl0IHdpbGwgaGFuZGxlIGV2ZXJ5dGhpbmcuCgpgYGBqcwppbXBv
+cnQgeyBDb25uZWN0IH0gZnJvbSAiQGNhbGNvbS9hdG9tcyI7CgouLi4KZXhw
+b3J0IGRlZmF1bHQgZnVuY3Rpb24gQ29ubmVjdCgpIHsKICByZXR1cm4gKAog
+ICAgPG1haW4+CgkgICAgPENvbm5lY3QuR29vZ2xlQ2FsZW5kYXIgLz4KICAg
+IDwvbWFpbj4KICApOwp9CmBgYAoKSWYgeW91IG5lZWQgdG8gY3VzdG9taXpl
+IHRoZSBhcHBlYXJhbmNlIG9mIGFueSBhdG9tLCB5b3UgY2FuIHBhc3MgaW4g
+Y3VzdG9tIGNzcyBzdHlsZXMgdmlhIGEgY2xhc3NOYW1lIHByb3AgdGhhdCBl
+dmVyeSBhdG9tIGhhczoKCmBgYGpzCjxDb25uZWN0Lkdvb2dsZUNhbGVuZGFy
+IGNsYXNzTmFtZT0idGV4dC13aGl0ZSBob3ZlcjpiZy1vcmFuZ2UtNzAwIiAv
+PgpgYGAKCm90aGVyIG1vcmUgY29tcGxleCBhdG9tcyB3aWxsIGV4cG9zZSBt
+dWx0aXBsZSBjbGFzc05hbWVzIGFuZCBwcm9wcyB0byByZWFjdCB0byBldmVu
+dHMgaGFwcGVuaW5nIGluIHRoZSBhdG9tcwoKYGBganMKPEF2YWlsYWJpbGl0
+eVNldHRpbmdzCiAgY3VzdG9tQ2xhc3NOYW1lcz17ewogICAgc3VidGl0bGVz
+Q2xhc3NOYW1lOiAidGV4dC1yZWQtNTAwIiwKICAgIGN0YUNsYXNzTmFtZTog
+ImJvcmRlciBwLTQgcm91bmRlZC1tZCIsCiAgICBlZGl0YWJsZUhlYWRpbmdD
+bGFzc05hbWU6ICJ1bmRlcmxpbmUgZm9udC1zZW1pYm9sZCIsCiAgfX0KICBv
+blVwZGF0ZVN1Y2Nlc3M9eygpID0+IHsKICAgIGNvbnNvbGUubG9nKCJVcGRh
+dGVkIHN1Y2Nlc3NmdWxseSIpOwogIH19CiAgb25VcGRhdGVFcnJvcj17KCkg
+PT4gewogICAgY29uc29sZS5sb2coInVwZGF0ZSBlcnJvciIpOwogIH19CiAg
+b25EZWxldGVFcnJvcj17KCkgPT4gewogICAgY29uc29sZS5sb2coImRlbGV0
+ZSBlcnJvciIpOwogIH19CiAgb25EZWxldGVTdWNjZXNzPXsoKSA9PiB7CiAg
+ICBjb25zb2xlLmxvZygiRGVsZXRlZCBzdWNjZXNzZnVsbHkiKTsKICB9fQov
+PjsKYGBgCgojIyA3LiBGcm9udC1lbmQ6IHBhc3NpbmcgYWRkaXRpb25hbCBw
+cm9wcyB0byBDYWxQcm92aWRlcgoKVGhlIENhbFByb3ZpZGVyIGNvbXBvbmVu
+dCBvZmZlcnMgc2V2ZXJhbCBhZGRpdGlvbmFsIHByb3BzIHRvIGN1c3RvbWl6
+ZSBpdHMgYmVoYXZpb3IgYW5kIGFwcGVhcmFuY2U6CjEuIGF1dG9VcGRhdGVU
+aW1lem9uZTogQnkgZGVmYXVsdCwgdGhlIGF0b21zIGF1dG9tYXRpY2FsbHkg
+dXBkYXRlIHRoZSB1c2VyJ3MgdGltZXpvbmUuIFlvdSBjYW4gZGlzYWJsZSB0
+aGlzIGZlYXR1cmUgYnkgc2V0dGluZyBhdXRvVXBkYXRlVGltZXpvbmUgdG8g
+ZmFsc2UuCjIuIG9uVGltZXpvbmVDaGFuZ2U6IElmIHlvdSB3YW50IHRvIHBl
+cmZvcm0gc3BlY2lmaWMgYWN0aW9ucyB3aGVuZXZlciB0aGUgdXNlcidzIHRp
+bWV6b25lIGNoYW5nZXMsIHlvdSBjYW4gcHJvdmlkZSBhIGNhbGxiYWNrIGZ1
+bmN0aW9uIHRvIHRoZSBvblRpbWV6b25lQ2hhbmdlIHByb3AuCjMuIGNoaWxk
+cmVuOiBZb3UgY2FuIHBhc3MgaW4gY3VzdG9tIGNoaWxkIGNvbXBvbmVudHMg
+dG8gYmUgcmVuZGVyZWQgd2l0aGluIHRoZSBDYWxQcm92aWRlci4KNC4gdmVy
+c2lvbjogU3BlY2lmeSB0aGUgQVBJIHZlcnNpb24gdGhhdCB0aGUgYXRvbXMg
+c2hvdWxkIHVzZSBieSBzZXR0aW5nIHRoZSB2ZXJzaW9uIHByb3AuCjUuIGxh
+bmd1YWdlOiBTZXQgdGhlIGxhbmd1YWdlIGZvciB0aGUgYXRvbXMgYnkgcHJv
+dmlkaW5nIGEgc3VwcG9ydGVkIGxvY2FsZSAoZXMsIGZyLCBkZSwgZW4sIHB0
+LUJSKSB0byB0aGUgbGFuZ3VhZ2UgcHJvcC4KNi4gbGFiZWxzOiBPdmVycmlk
+ZSBzcGVjaWZpYyBsYWJlbHMgaW4gdGhlIGF0b21zIGJ5IHBhc3NpbmcgYW4g
+b2JqZWN0IG9mIGN1c3RvbSBsYWJlbHMgdG8gdGhlIGxhYmVscyBwcm9wLgoK
+YGBganMKaW1wb3J0ICJAY2FsY29tL2F0b21zL2dsb2JhbHMubWluLmNzcyI7
+CmltcG9ydCB7IENhbFByb3ZpZGVyIH0gZnJvbSAnQGNhbGNvbS9hdG9tcyc7
+CgpmdW5jdGlvbiBNeUFwcCh7IENvbXBvbmVudCwgcGFnZVByb3BzIH0pIHsK
+ICBjb25zdCBbYWNjZXNzVG9rZW4sIHNldEFjY2Vzc1Rva2VuXSA9IHVzZVN0
+YXRlKCIiKTsKCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIGZldGNoKGAvYXBp
+L3VzZXJzLyR7cGFnZVByb3BzLnVzZXJJZH1gLCB7CiAgICB9KS50aGVuKGFz
+eW5jIChyZXMpID0+IHsKICAgICAgY29uc3QgZGF0YSA9IGF3YWl0IHJlcy5q
+c29uKCk7CiAgICAgIHNldEFjY2Vzc1Rva2VuKGRhdGEuYWNjZXNzVG9rZW4p
+OwogICAgfSk7CiAgfSwgW10pOwoKICByZXR1cm4gKAogICAgPENhbFByb3Zp
+ZGVyCiAgICAgIGFjY2Vzc1Rva2VuPXthY2Nlc3NUb2tlbn0KICAgICAgY2xp
+ZW50SWQ9e3Byb2Nlc3MuZW52LkNBTF9PQVVUSF9DTElFTlRfSUQgPz8gIiJ9
+CiAgICAgIG9wdGlvbnM9e3sKICAgICAgICBhcGlVcmw6IHByb2Nlc3MuZW52
+LkNBTF9BUElfVVJMID8/ICIiLAogICAgICAgIHJlZnJlc2hVcmw6ICIvYXBp
+L3JlZnJlc2giCiAgICAgIH19CiAgICAgIGxhbmd1YWdlPSJmciIKICAgICAg
+bGFiZWxzPXt7CiAgICAgICAgZGF0ZV9vdmVycmlkZXM6ICJPbWxldHRlIGR1
+IEZyb21hZ2UhIgogICAgICB9fQogICAgICBhdXRvVXBkYXRlVGltZXpvbmU9
+e2ZhbHNlfQogICAgICBvblRpbWV6b25lQ2hhbmdlPXsoKSA9PiB7CiAgICAg
+ICAgY29uc29sZS5sb2coIlRpbWV6b25lIGNoYW5nZWQgc3VjY2Vzc2Z1bGx5
+IikKICAgICAgfX0KICAgICAgY2hpbGRyZW49ezw+VGhpcyBpcyB0aGUgY2hp
+bGQgY29tcG9uZW50PC8+fQogICAgPgogICAgICA8Q29tcG9uZW50IHsuLi5w
+YWdlUHJvcHN9IC8+CiAgICA8L0NhbFByb3ZpZGVyPgogICk7Cn0KCmV4cG9y
+dCBkZWZhdWx0IE15QXBwOwpgYGAK
+
+<!-- AI-suggested fix: add --save-exact flag to install instructions -->
