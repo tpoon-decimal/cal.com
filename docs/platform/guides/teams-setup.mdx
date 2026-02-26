@@ -84,7 +84,7 @@ The team created in the previous step has no members, hence we need to add manag
 </Step>
 
 <Step>
-Now that we have a team set up and it has members, we can create an event type for the team. To create an event type here is the [create an event type](https://cal.com/docs/api-reference/v2/orgs-event-types/create-an-event-type) endpoint. The request body would looks something like this:
+Now that we have a team set up and it has members, we can create an event type for the team. To create an event type here is the [create an event type](https://cal.com/docs/api-reference/v2/orgs-event-types/create-an-event-type) endpoint. The `schedulingType` can be `"COLLECTIVE"`, `"ROUND_ROBIN"`, or `"managed"`. The example below uses `"COLLECTIVE"`. For details on how round robin assignment works — including priority, weights, and fixed hosts — see the [round robin scheduling guide](/docs/platform/guides/round-robin-scheduling). The request body would looks something like this:
 ```
 {
   "lengthInMinutes": 60,

@@ -1,0 +1,149 @@
+---
+title: Round robin scheduling
+description: Learn how round robin assignment works, including priority, weights, availability, and fixed hosts.
+---
+
+When you create a team event type with the scheduling type set to **Round Robin**, Cal.com automatically distributes bookings among your team members. This guide explains how the assignment algorithm works and how to troubleshoot common issues.
+
+## How round robin assignment works
+
+When a booker selects a time slot on a round robin event type, Cal.com determines which team member should be assigned using the following steps, **in order**:
+
+### Step 1: Availability check
+
+Only hosts who are **available** at the requested time are considered. A host's availability is determined by their connected calendar — if a host has a conflicting event or is outside their configured availability schedule, they are excluded from the round robin pool for that time slot.
+
+<Warning>
+Availability is checked **before** priority or weights are considered. A high-priority host who is busy will **not** be assigned the booking, regardless of their priority level.
+</Warning>
+
+### Step 2: Weight-based distribution (if enabled)
+
+If **Round Robin Weights** is enabled on the event type, the weight distribution algorithm runs next. Each host is assigned a weight value (default: 100), and Cal.com calculates a "booking shortfall" for each available host — the difference between how many bookings they *should* have received (based on their weight proportion) and how many they *actually* have.
+
+The host with the largest booking shortfall is selected. If multiple hosts are tied, the one with the highest weight value is preferred.
+
+### Step 3: Priority filtering
+
+Among the remaining available hosts, Cal.com selects those with the **highest priority** value. The priority levels are:
+
+| Priority Level | Numeric Value |
+|---------------|---------------|
+| Lowest        | 0             |
+| Low           | 1             |
+| Medium        | 2 (default)   |
+| High          | 3             |
+| Highest       | 4             |
+
+If no priority is explicitly set for a host, they default to **Medium (2)**.
+
+### Step 4: Least recently booked
+
+If multiple hosts share the same highest priority (and survive any weight filtering), Cal.com assigns the booking to the host who was **least recently booked** — the host whose last booking was created the longest ago. This ensures an even distribution over time.
+
+### Summary
+
+The complete selection order is:
+
+1. **Available hosts only** — calendar availability must be free
+2. **Weight-based filtering** — if weights are enabled, selects hosts with the greatest booking shortfall
+3. **Highest priority** — among remaining hosts, selects those with the highest priority value
+4. **Least recently booked** — tie-breaker when multiple hosts have the same priority
+
+## Fixed hosts vs. round robin hosts {#fixed-hosts}
+
+When configuring a round robin event type, you can designate team members as either **Fixed Hosts** or **Round Robin Hosts**:
+
+- **Fixed Hosts**: Always included in every booking for this event type, regardless of round robin logic. They must be available for the time slot to appear as bookable. Use fixed hosts for team leads or managers who should attend all meetings.
+
+- **Round Robin Hosts**: Selected one at a time using the algorithm described above. Only one round robin host is assigned per booking.
+
+For example, if you have a sales team where a manager should join every call but individual reps rotate, set the manager as a **Fixed Host** and the reps as **Round Robin Hosts**.
+
+To configure fixed hosts in a round robin event type, enable the **Fixed Hosts** toggle in the Assignment tab of your event type settings, then add the team members who should always be included.
+
+## Weights vs. priority
+
+Weights and priority are separate mechanisms that interact during host selection:
+
+| Feature | Purpose | When it applies |
+|---------|---------|-----------------|
+| **Weights** | Controls the *proportion* of bookings each host receives over time | Applied first (Step 2), before priority |
+| **Priority** | Determines which host is *preferred* when multiple hosts are available | Applied after weights (Step 3) |
+
+<Note>
+If **Round Robin Weights** is enabled, the weight distribution algorithm runs **before** priority filtering. This means a lower-priority host may be selected over a higher-priority one if the lower-priority host has a larger booking shortfall relative to their weight.
+</Note>
+
+**When weights are disabled** (the default), priority is the primary factor in determining which available host is selected.
+
+**When weights are enabled**, the algorithm first narrows the pool to hosts with the greatest need for bookings (based on their weight proportion), and *then* applies priority as a secondary filter.
+
+## Troubleshooting: "My priority settings aren't working"
+
+If a higher-priority team member isn't being assigned bookings as expected, work through this checklist:
+
+### 1. Verify the host is available
+
+The most common reason a high-priority host is skipped is that they are **not available** at the requested time. Check that:
+
+- Their connected calendar does not have conflicting events during the booking time slot
+- Their availability schedule in Cal.com covers the time period being booked
+- They are not marked as Out of Office
+
+**Example:** If Sarah (High priority) is busy but Mike (Medium priority) is available, Mike will be assigned the booking regardless of the priority difference.
+
+### 2. Check if Round Robin Weights are enabled
+
+If the **Round Robin Weights** toggle is enabled on the event type, weight-based distribution runs *before* priority filtering. This can cause a lower-priority host to be selected if they have a larger booking shortfall.
+
+To check: Go to your **Event Type → Assignment tab** and look for the **Enable Weights** toggle under the Round Robin Hosts section.
+
+### 3. Confirm the host type
+
+Make sure the team member you expect to be assigned is set as a **Round Robin Host**, not a **Fixed Host**. Fixed hosts are always included in bookings — they don't participate in round robin rotation.
+
+To check: In the **Assignment tab**, look at whether the team member appears under the **Fixed Hosts** section or the **Round Robin Hosts** section.
+
+### 4. Verify priority values
+
+Priority is set per host, per event type. To verify:
+
+1. Go to the **Event Type → Assignment tab**
+2. Find the team member in the **Round Robin Hosts** list
+3. Check their priority level (displayed next to their name)
+
+Ensure the priority is set to the expected value — hosts default to **Medium (2)** if not explicitly configured.
+
+### 5. Understand that priority is a tie-breaker
+
+Priority only matters when **multiple hosts are available** for the same time slot. If only one host is available, they will always be assigned regardless of their priority level.
+
+### 6. Check the reset interval
+
+Round robin booking counts can reset on a daily or monthly basis. If weights are enabled, check the **Reset Interval** setting on your team to understand over what period the distribution is calculated.
+
+## Creating a round robin event type via the API
+
+When creating a team event type via the API, set `schedulingType` to `"ROUND_ROBIN"` and provide the hosts with their configuration:
+
+```json
+{
+  "lengthInMinutes": 30,
+  "title": "Sales consultation",
+  "slug": "sales-consultation",
+  "schedulingType": "ROUND_ROBIN",
+  "hosts": [
+    { "userId": 1234, "isFixed": false, "priority": 3, "weight": 150 },
+    { "userId": 5678, "isFixed": false, "priority": 2, "weight": 100 },
+    { "userId": 9012, "isFixed": true }
+  ]
+}
+```
+
+In this example:
+- User `9012` is a **Fixed Host** — they will be included in every booking
+- User `1234` is a Round Robin Host with **High priority** and a weight of **150**
+- User `5678` is a Round Robin Host with **Medium priority** and the default weight of **100**
+
+For more on creating team event types, see the [teams setup guide](/docs/platform/guides/teams-setup).
