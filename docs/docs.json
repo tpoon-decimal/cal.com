@@ -206,6 +206,42 @@
         ]
       },
       {
+        "tab": "Platform",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "platform/introduction",
+              "platform/quickstart",
+              "platform/faq"
+            ]
+          },
+          {
+            "group": "Hooks",
+            "pages": [
+              "platform/bookings-hooks",
+              "platform/calendars-hooks",
+              "platform/event-types-hooks",
+              "platform/user-or-team-related-hooks"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "platform/guides/booker-active-booking-limit",
+              "platform/guides/booking-fields",
+              "platform/guides/booking-redirects",
+              "platform/guides/custom-booking-flow",
+              "platform/guides/custom-slot-select-flow",
+              "platform/guides/global-event-types",
+              "platform/guides/managed-orgs",
+              "platform/guides/replacing-toasts",
+              "platform/guides/teams-setup"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API v1 Reference [Deprecated]",
         "openapi": {
           "source": "/api-reference/v1/openapi-v1.json",
