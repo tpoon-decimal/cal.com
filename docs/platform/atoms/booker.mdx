@@ -700,6 +700,10 @@ export default function Booker( props : BookerProps ) {
 
 The booker atom also supports rescheduling a booking. To reschedule a booking, you need to pass in the `rescheduleUid` prop to the booker atom along with the other necessary props. This will allow the booker to display the reschedule form and handle the rescheduling process. The `rescheduleUid` is the booking uid you get when you create a booking.
 
+<Note>
+By default, rescheduling is only allowed for upcoming bookings. If you want attendees to be able to reschedule **past or missed bookings**, you must enable the **Allow rescheduling past events** setting in the **Advanced** tab of your [event type settings](/platform/atoms/event-type#event-type-settings). When this setting is disabled (the default), reschedule links for bookings whose scheduled time has already passed will not work.
+</Note>
+
 Here is an example of how to use the booker atom for rescheduling an individual event:
 
 ```js
