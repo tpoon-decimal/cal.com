@@ -1,0 +1,95 @@
+---
+title: "Booker Active Booking Limit"
+description: "Understand how the booker active booking limit works and troubleshoot the 'maximum bookings reached' error."
+---
+
+## What is the Booker Active Booking Limit?
+
+The Booker Active Booking Limit is a per-event-type setting that restricts how many upcoming bookings a single person can have scheduled at the same time for a given event type. This helps event organizers manage capacity and prevent individual bookers from monopolizing available time slots.
+
+When enabled, the limit is enforced at the time of booking. If a booker has already reached the maximum number of active bookings for that event type, they will see a **"maximum bookings reached"** error and will not be able to create a new booking until their count drops below the limit.
+
+### Configuring the limit
+
+Event organizers can enable and configure this setting from the **Limits** tab when editing an event type:
+
+1. Navigate to **Event Types** and select the event type you want to configure.
+2. Open the **Limits** tab.
+3. Toggle on **Limit upcoming bookings per booker**.
+4. Enter the maximum number of active bookings allowed (minimum of 1).
+5. Optionally, check **Offer to reschedule last booking** — when enabled, bookers who have reached the limit will be offered the option to reschedule their most recent booking to the new time slot instead of being blocked entirely.
+
+<Note>
+  This setting is not supported for recurring event types.
+</Note>
+
+## Which bookings count toward the limit?
+
+A booking counts toward the limit only if it meets **all** of the following criteria:
+
+- **Status is "Accepted"** — Pending, cancelled, and rejected bookings do not count.
+- **Start time is in the future** — Past bookings (even from yesterday) do not count.
+- **Booker's email matches** — Only bookings where the person is listed as an attendee with the same email address count toward their limit.
+
+### When does the limit reset?
+
+The limit automatically decreases when any of the following occur:
+
+- A booking's scheduled time passes (the event has taken place).
+- The booker cancels an active booking.
+- The event host cancels or rejects a booking.
+
+## Troubleshooting the "Maximum Bookings Reached" Error
+
+If you or your users are seeing the "maximum bookings reached" error, the following steps can help identify and resolve the issue.
+
+### 1. Verify the booking was actually cancelled
+
+In rare cases, a cancellation may not have fully processed, and the booking may still have an "Accepted" status in the system.
+
+**How to check:** Navigate to the bookings page and confirm that the cancelled booking shows a **"Cancelled"** status rather than "Accepted."
+
+### 2. Check for other active bookings on the same event type
+
+The limit applies per event type. If one booking was cancelled but there are still other upcoming accepted bookings for the same event type, the booker may still be at the limit.
+
+**How to check:** Review all upcoming bookings and filter by the specific event type. Only future bookings with "Accepted" status count toward the limit.
+
+### 3. Confirm the cancellation was for the correct event type
+
+Each event type has its own separate booking limit. Cancelling a booking for one event type (for example, "30 Minute Meeting") does not free up a slot for a different event type (for example, "Strategy Session").
+
+**How to check:** Verify that the cancelled booking belongs to the same event type the booker is trying to book.
+
+### 4. Clear browser cache or try an incognito window
+
+The booking page may be displaying stale cached data.
+
+**How to fix:** Refresh the booking page, clear the browser cache, or open the booking link in an incognito/private browsing window.
+
+### 5. Wait briefly and retry
+
+If a booking was just cancelled, the system may need a moment to process the change.
+
+**How to fix:** Wait 1–2 minutes, then refresh the booking page and try again.
+
+## Step-by-step resolution
+
+Follow these steps in order to resolve the error:
+
+1. **Review upcoming bookings** — Log in and navigate to the bookings page. Identify all bookings with "Accepted" status that are scheduled in the future for the event type in question.
+2. **Verify cancellations** — Confirm that any previously cancelled bookings display a "Cancelled" status. If a booking still shows as "Accepted," try cancelling it again.
+3. **Cancel unnecessary bookings** — If there are multiple upcoming bookings for this event type that are no longer needed, cancel them to free up capacity.
+4. **Clear browser cache** — Refresh the page or use an incognito/private window to ensure the latest booking data is displayed.
+5. **Retry the booking** — After confirming that the active booking count is below the limit, attempt the booking again.
+
+## Still having issues?
+
+If the error persists after verifying all of the above, contact support with the following details:
+
+- The specific event type you are trying to book
+- The bookings you have cancelled (including date and time)
+- A list of your current upcoming bookings for this event type
+- The exact error message displayed
+
+This information will help the support team investigate whether there is a technical issue preventing the cancellation from being properly reflected in the system.
