@@ -1,0 +1,71 @@
+---
+title: "Restriction Schedules"
+description: "Learn how Restriction Schedules add an additional layer of booking control on top of your regular availability."
+---
+
+# Restriction Schedules
+
+Restriction Schedules are an additional layer of booking control that further limits when bookings can occur on your event types. While your Availability Schedule defines when you're generally available (e.g., 9am–5pm), a Restriction Schedule acts as a policy-based filter that removes any time slots outside its defined window.
+
+## How Restriction Schedules Work
+
+Restriction Schedules work **on top of** your regular availability. They do not add available times — they only restrict them further. Here's how the two schedule types interact:
+
+- **Availability Schedule**: Defines your general working hours (e.g., Monday–Friday, 9am–5pm)
+- **Restriction Schedule**: Further limits bookings to specific windows within your availability
+
+For example, if your availability is 9am–5pm and you apply a restriction schedule of 1pm–4pm, bookers will only see time slots between 1pm and 4pm, even though you're technically available all day.
+
+<Note>
+If you're unavailable on a given day according to your Availability Schedule, Cal.com won't show any times for that day. Restriction Schedules only further limit what's already available — they don't override unavailability.
+</Note>
+
+## Configuring a Restriction Schedule
+
+To add or modify a restriction schedule on your event type:
+
+1. Navigate to **Event Types** and select the event type you want to configure.
+2. Go to the **Availability** tab.
+3. Look for the **Restriction Schedule** option.
+4. Enable it and select the schedule you want to use as your restriction.
+5. Save your changes.
+
+## Timezone Settings
+
+Restriction Schedules can evaluate times in two different ways:
+
+- **Schedule's timezone** (default): The restriction window is applied based on the timezone configured in the restriction schedule itself.
+- **Booker's timezone**: When the **Use Booker Timezone** option is enabled, the restriction times are evaluated in the booker's local timezone.
+
+This setting can significantly affect which time slots are available. For example, if your restriction schedule allows bookings from 9am–12pm in your timezone but **Use Booker Timezone** is enabled, a booker in a different timezone will see the 9am–12pm window based on *their* local time, not yours.
+
+## Availability Schedule vs. Restriction Schedule
+
+A common point of confusion is the difference between availability and restriction schedules:
+
+| Feature | Availability Schedule | Restriction Schedule |
+|---|---|---|
+| Purpose | Define when you're available | Further limit available times |
+| Effect | Creates available time slots | Removes time slots outside the window |
+| Required | Yes | No (optional) |
+| Scope | User-level default or event type override | Event type specific |
+
+## Use Cases
+
+Restriction Schedules are useful when you want to:
+
+- **Limit certain event types to specific hours** — for example, discovery calls only in the morning.
+- **Create seasonal booking windows** — restrict bookings to certain dates or periods.
+- **Restrict bookings to certain time blocks** — useful for team scheduling where specific event types should only be available during designated windows.
+- **Implement policy-based booking restrictions** — managed by team admins to enforce organization-wide booking policies.
+
+## "Not allowed by restriction schedule" Error
+
+If you or your bookers see the error **"Not allowed by restriction schedule,"** it means the requested booking time falls outside the restriction schedule's allowed window. This can happen even if the time falls within your regular availability hours.
+
+To resolve this:
+
+1. Check if a restriction schedule is enabled on your event type under the **Availability** tab.
+2. Review the time window defined in the restriction schedule.
+3. Verify the timezone settings — especially whether **Use Booker Timezone** is enabled.
+4. Either adjust the restriction schedule to include the desired booking times, or disable it entirely if it's not needed.
