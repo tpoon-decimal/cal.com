@@ -307,6 +307,20 @@ For team event types, availability for a specific event can also be configured f
 
 <img src="/images/Team_Availability.png" alt="Team availability" />
 
+**Restriction Schedule (Team / Enterprise)**
+
+For team event types, you can enable a Restriction Schedule to apply an additional layer of time restrictions on top of each host's regular availability. This is a team-level feature that must be enabled for your team.
+
+When a Restriction Schedule is active, a booking slot is only offered to bookers if it falls within **both** the host's personal availability **and** the restriction schedule's allowed time ranges. For example, if a host is available Monday–Friday 9 AM–5 PM but the restriction schedule only permits Monday–Wednesday 10 AM–2 PM, bookable slots are limited to Monday–Wednesday 10 AM–2 PM.
+
+To configure a Restriction Schedule, toggle on the **Restrict schedule for hosts** option in the Availability tab of a team event type, then select one of your existing availability schedules to use as the restriction. The restriction schedule cannot be the same schedule that is already set as the event's main availability schedule.
+
+The restriction schedule also includes a **Use booker's timezone** option. When enabled, the restriction schedule's time windows are evaluated in the booker's local timezone rather than the schedule's own timezone. This is useful when you want to ensure that bookings only happen during certain hours of the booker's day, regardless of where your team is located.
+
+<Info>
+  If a time slot is blocked by the restriction schedule, it will not appear as available to bookers. The restriction schedule acts as an additional filter — it can only further narrow availability, never expand it.
+</Info>
+
 **3. Assignment**
 
 The assignment tab is only available for team event types. It lets you configure what kind of scheduling you want to enable for your team event, where you can choose from a collective, round robin or managed event. You can also choose who amongst your team can or cannot attend the event.
