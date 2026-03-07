@@ -123,6 +123,38 @@ POST /v2/event-types
 | scheduleId | number | ID of schedule to use |
 | requiresConfirmation | boolean | Require host confirmation |
 | hidden | boolean | Hide from public profile |
+| bookerActiveBookingsLimit | object | Limit the number of active bookings a booker can have for this event type |
+
+### Booker Active Bookings Limit
+
+The `bookerActiveBookingsLimit` setting restricts how many active bookings a single booker (identified by email) can hold for a given event type at the same time. When the limit is reached, the booker sees a "maximum bookings reached" message and cannot create additional bookings for that event type.
+
+```json
+{
+  "bookerActiveBookingsLimit": {
+    "maximumActiveBookings": 3,
+    "offerReschedule": true,
+    "disabled": false
+  }
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| maximumActiveBookings | number | The maximum number of active bookings a booker can have for this event type (minimum: 1) |
+| offerReschedule | boolean | Whether to offer rescheduling the most recent active booking to the chosen time slot when the limit is reached |
+| disabled | boolean | Set to `true` to disable the limit |
+
+#### How active bookings are counted
+
+Only bookings that meet **all** of the following criteria count toward the limit:
+
+- The booking has an **Accepted** status
+- The booking is scheduled **in the future** (the start time has not yet passed)
+- The booking belongs to the **same event type** that has the limit configured
+- The booking is associated with the **same booker email address**
+
+Canceled bookings and past bookings (where the event start time has already passed) do **not** count toward the limit. Once a booking is canceled or its scheduled time passes, it no longer counts against the booker's active booking total, freeing up capacity for new bookings.
 
 ## Location Types
 
