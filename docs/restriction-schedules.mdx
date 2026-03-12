@@ -1,0 +1,61 @@
+---
+title: "Restriction Schedules"
+description: "Learn how Restriction Schedules add an additional policy-based filter on top of your regular availability to limit when bookings can occur."
+icon: "filter"
+---
+
+Restriction Schedules allow you to add an additional policy-based filter on top of your regular availability. While your availability schedule defines when you are available for bookings, a Restriction Schedule further limits the time slots that can be booked.
+
+This feature is available for team event types and is useful for enforcing organization-wide booking policies while still allowing individual team members to maintain their own availability schedules.
+
+## How Restriction Schedules Work
+
+A Restriction Schedule works by narrowing your available time slots to only those that fall within the restriction window. Both your availability schedule and the Restriction Schedule must overlap for a time slot to appear as bookable.
+
+For example:
+
+- If your availability is set to **7am–6pm**
+- And you add a Restriction Schedule of **8am–5pm**
+- Only time slots between **8am–5pm** will be bookable
+
+## Configuring a Restriction Schedule
+
+To add a Restriction Schedule to a team event type:
+
+1. Go to your **Event Type** settings.
+2. Open the **Availability** tab.
+3. Enable the **Restriction Schedule** toggle.
+4. Select which schedule to use as the restriction.
+5. Configure the **Use Booker Timezone** checkbox if needed (see below).
+
+To remove a Restriction Schedule, disable the toggle. This clears the restriction and restores your full availability for that event type.
+
+## Use Booker Timezone
+
+The **Use Booker Timezone** checkbox changes how the restriction hours are interpreted:
+
+- **When enabled**: The restriction hours are applied based on the booker's timezone. For example, if the restriction is set to 9am–5pm and the booker is in New York, they can only book slots that fall within 9am–5pm New York time.
+- **When disabled** (default): The restriction hours are applied based on the restriction schedule's configured timezone, regardless of where the booker is located.
+
+When this option is disabled, the restriction schedule's timezone is displayed below the schedule details.
+
+## "Not allowed by restriction schedule" Error
+
+If a booker receives this error, the requested booking time falls outside the configured Restriction Schedule window.
+
+To resolve this:
+
+1. Open your event type settings and go to the **Availability** tab.
+2. Check whether a Restriction Schedule is enabled.
+3. Verify the restriction schedule's hours include the time being requested.
+4. Review the timezone setting — if **Use Booker Timezone** is enabled, the restriction hours apply in the booker's local timezone. If disabled, they apply in the restriction schedule's configured timezone.
+
+## Restriction Schedule vs. Availability Schedule
+
+| | Availability Schedule | Restriction Schedule |
+|---|---|---|
+| **Purpose** | Defines when you are personally available for meetings | An additional policy layer that limits which available slots can be booked |
+| **Scope** | Set per user or per event type | Applied to team event types |
+| **Required for booking** | Yes — a slot must be within your availability | Yes — if enabled, a slot must also fall within the restriction window |
+
+Both conditions must be met for a time slot to appear as bookable.

@@ -206,6 +206,17 @@
         ]
       },
       {
+        "tab": "Features",
+        "groups": [
+          {
+            "group": "Event Types",
+            "pages": [
+              "restriction-schedules"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API v1 Reference [Deprecated]",
         "openapi": {
           "source": "/api-reference/v1/openapi-v1.json",
