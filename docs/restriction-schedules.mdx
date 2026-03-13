@@ -1,0 +1,59 @@
+---
+title: "Restriction Schedules"
+description: "Limit when bookings can occur on team event types by applying an additional schedule that narrows down available time slots."
+icon: "filter"
+---
+
+Restriction Schedules are an additional layer of control that limits when bookings can occur on team event types. While your availability schedule defines when you're free to take meetings, a Restriction Schedule acts as a policy filter that further narrows down the bookable time slots.
+
+This feature is available for team event types (Round Robin and Collective scheduling) and can be used to enforce booking policies such as limiting bookings to core business hours, even if individual team members have wider availability.
+
+## How Restriction Schedules Work
+
+A Restriction Schedule narrows your available time slots by computing the intersection of your regular availability and the restriction window. Only time slots that fall within **both** the availability schedule and the restriction schedule are offered to bookers.
+
+For example:
+
+- If a team member's **availability** is set to 9:00 AM – 5:00 PM (Europe/London)
+- And the **restriction schedule** is set to 10:00 AM – 6:00 PM (Asia/Dubai)
+- Only time slots that fall within both windows will be bookable
+
+Days that have no overlap between the availability schedule and the restriction schedule will show as unavailable.
+
+## Configuring a Restriction Schedule
+
+Restriction Schedules are configured per event type:
+
+1. Go to your **Event Type** settings.
+2. Navigate to the **Availability** tab.
+3. Enable the **Restriction Schedule** toggle.
+4. Select the schedule you want to use as the restriction. This can be any availability schedule configured in your account, but it cannot be the same schedule already assigned as the event type's main availability.
+5. Review the schedule's hours and timezone to confirm they match your intended booking window.
+
+<Info>
+The Restriction Schedule toggle is only available on team event types that use Round Robin or Collective scheduling.
+</Info>
+
+### Use Booker Timezone
+
+Restriction Schedules include a **Use Booker Timezone** checkbox that changes how the restriction hours are interpreted:
+
+- **Disabled** (default): The restriction hours use the timezone configured on the restriction schedule itself. For example, if the restriction schedule is set to 9:00 AM – 5:00 PM in America/New_York, those hours always refer to Eastern Time regardless of where the booker is located.
+- **Enabled**: The restriction hours are interpreted in the booker's local timezone. For example, a restriction of 9:00 AM – 5:00 PM would mean 9:00 AM – 5:00 PM in whatever timezone the booker is viewing the booking page from.
+
+## Understanding the "Not Allowed by Restriction Schedule" Error
+
+If someone attempting to book receives the error **"Not allowed by restriction schedule"**, it means the requested booking time falls outside the restriction window — even though the time may appear to be within the host's regular availability.
+
+Common causes include:
+
+- The restriction schedule does not include the day or time of the requested booking.
+- The restriction schedule's timezone differs from the booker's timezone, causing the effective restriction window to shift. Verify the timezone settings on the restriction schedule, or enable **Use Booker Timezone** if the restriction should follow the booker's local time.
+
+## Disabling a Restriction Schedule
+
+To remove the restriction and allow bookings based solely on team members' availability schedules:
+
+1. Go to your **Event Type** settings.
+2. Navigate to the **Availability** tab.
+3. Toggle off the **Restriction Schedule** setting.
