@@ -1,0 +1,37 @@
+---
+title: Booker active booking limit
+description: Limit how many active bookings a single booker can have for an event type.
+---
+
+The booker active booking limit lets event hosts restrict how many active bookings a single person (booker) can hold for a specific event type at any given time. This prevents individual bookers from reserving too many slots on your calendar.
+
+## How the limit works
+
+When enabled on an event type, only **future bookings with Accepted status** count toward the limit:
+
+- **Canceled bookings** do not count toward the limit.
+- **Past bookings** (events that have already occurred) do not count toward the limit.
+
+Once a booking passes its scheduled time or is canceled, it no longer counts toward the limit, freeing up a slot for the booker to make a new booking.
+
+### Example
+
+If you set the limit to 3, a booker can have up to 3 upcoming accepted bookings for that event type. When one of those bookings occurs or is canceled, the booker can make a new booking.
+
+## Configuring the limit
+
+The booker active booking limit is configured in the **Limits** tab of your event type settings. You can set:
+
+- **Maximum active bookings** — The maximum number of future accepted bookings a single booker can hold for this event type. The minimum value is 1.
+- **Offer to reschedule** — When enabled, a booker who has reached the limit is offered the option to reschedule their last active booking to the newly selected time slot instead of being blocked.
+
+<Note>
+  This feature is not available for recurring event types.
+</Note>
+
+## API configuration
+
+When using the API, the booker active booking limit is configured through the `bookerActiveBookingsLimit` field on an event type:
+
+- `maximumActiveBookings` — The maximum number of active bookings (integer, minimum 1).
+- `offerReschedule` — Whether to offer rescheduling the last active booking when the limit is reached (boolean).
