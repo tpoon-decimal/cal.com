@@ -1,0 +1,31 @@
+---
+title: "Restriction Schedules"
+description: "An additional layer on top of regular availability that further limits when bookings can occur for team event types."
+---
+
+Restriction Schedules are an additional layer on top of your regular availability that further limits when bookings can occur. While your availability schedule defines when you're generally available, a Restriction Schedule acts as a policy filter that narrows bookable time slots to only those that fall within the restriction window.
+
+This feature is available on team event types.
+
+## How Restriction Schedules Work
+
+When a Restriction Schedule is configured on a team event type, the system validates available slots against both the host's availability and the restriction schedule. Only time slots that fall within both windows are bookable.
+
+For example, if a host's availability is set to 9am–5pm but the restriction schedule is set to 10am–6pm, only time slots between 10am and 5pm will be offered to bookers. If a booking time falls outside the restriction schedule, it will be rejected with the message **"Not allowed by restriction schedule."**
+
+## Configuring a Restriction Schedule
+
+1. Go to your **Event Type** settings for a team event type.
+2. Open the **Availability** tab.
+3. Enable the **Restriction Schedule** toggle.
+4. Select an existing schedule to use as the restriction schedule.
+5. The restriction schedule's hours define the window during which bookings are allowed.
+
+The restriction schedule uses a separate schedule from the host's availability schedule. You can select any schedule you have access to.
+
+## Use Booker Timezone
+
+Restriction Schedules include a **Use Booker Timezone** checkbox that changes how the restriction hours are interpreted:
+
+- **Disabled (default):** The restriction hours are applied in the restriction schedule's own configured timezone. For example, if the restriction schedule is set to 10am–6pm in Asia/Dubai, those hours are always interpreted in the Asia/Dubai timezone regardless of where the booker is located.
+- **Enabled:** The restriction hours are applied in the booker's local timezone. For example, if the restriction schedule is set to 10am–6pm and the booker is in Asia/Kolkata, the restriction allows bookings between 10am–6pm Kolkata time.

@@ -52,6 +52,12 @@
             ]
           },
           {
+            "group": "Features",
+            "pages": [
+              "developing/restriction-schedules"
+            ]
+          },
+          {
             "group": "Guides",
             "pages": [
               {
