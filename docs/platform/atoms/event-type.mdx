@@ -307,6 +307,14 @@ For team event types, availability for a specific event can also be configured f
 
 <img src="/images/Team_Availability.png" alt="Team availability" />
 
+**Restriction Schedules**
+
+For team event types, you can enable a restriction schedule to further limit when bookings can occur. A restriction schedule is a separate availability schedule that acts as an additional filter on top of the host's regular availability — only time slots that fall within **both** the regular availability and the restriction schedule are bookable.
+
+For example, if a host's regular availability is 9 AM–5 PM and the restriction schedule is set to 10 AM–4 PM, only the 10 AM–4 PM window is available for booking.
+
+To enable a restriction schedule, toggle **Add Restriction Schedule** in the Availability tab of a team event type and select a schedule. When enabled, a **Use Booker Timezone** checkbox is available. By default, restriction schedule times are interpreted in the schedule's own timezone. When **Use Booker Timezone** is checked, the restriction times are applied relative to the booker's timezone instead.
+
 **3. Assignment**
 
 The assignment tab is only available for team event types. It lets you configure what kind of scheduling you want to enable for your team event, where you can choose from a collective, round robin or managed event. You can also choose who amongst your team can or cannot attend the event.
