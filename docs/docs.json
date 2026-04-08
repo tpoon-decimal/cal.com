@@ -17,6 +17,17 @@
   "navigation": {
     "tabs": [
       {
+        "tab": "Help",
+        "groups": [
+          {
+            "group": "Event Types",
+            "pages": [
+              "booker-active-booking-limit"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API v2 Reference",
         "openapi": {
           "source": "/api-reference/v2/openapi.json",
