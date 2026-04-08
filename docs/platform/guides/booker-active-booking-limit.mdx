@@ -20,7 +20,7 @@ Only **future bookings** with an **accepted** status count toward the active boo
 
 ## Offer to reschedule
 
-When enabling the booker active booking limit, you can optionally allow bookers to reschedule their last active booking to the new time slot when the limit is reached, instead of blocking the booking entirely.
+When enabling the booker active booking limit, you can optionally allow bookers to reschedule an existing active booking to the new time slot when the limit is reached, instead of blocking the booking entirely.
 
 ## Setting the limit via API
 
@@ -36,6 +36,6 @@ You can configure the booker active booking limit when creating or updating an e
 ```
 
 - `maximumActiveBookings` — the maximum number of active upcoming bookings a booker can have for this event type. Must be at least 1.
-- `offerReschedule` — when `true`, bookers who have reached the limit are offered the option to reschedule their last booking to the new time slot.
+- `offerReschedule` — when `true`, bookers who have reached the limit are offered the option to reschedule an existing booking to the new time slot.
 
 <Note>The booker active booking limit is not supported on recurring event types.</Note>
