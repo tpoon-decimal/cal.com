@@ -1,0 +1,18 @@
+---
+title: "Booker Active Booking Limit"
+description: "Restrict how many upcoming bookings a single person can have for a specific event type."
+---
+
+The Booker Active Booking Limit lets you restrict how many upcoming bookings a single person (booker) can have for a specific event type at any given time. This prevents a single attendee from reserving multiple slots simultaneously.
+
+## How it works
+
+When a booker reaches the configured limit for an event type, they cannot schedule another event of that type until one of their existing bookings is completed or canceled.
+
+- The limit applies **per event type** — a booker's bookings for one event type do not count toward the limit on a different event type.
+- Only future bookings with an "Accepted" status count toward the limit.
+- Canceled and past events do not count toward the limit.
+
+## Setting the limit
+
+Configure the Booker Active Booking Limit in your event type settings under the **Limits** tab.
