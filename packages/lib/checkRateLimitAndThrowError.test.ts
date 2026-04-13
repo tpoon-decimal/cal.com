@@ -51,6 +51,25 @@ describe("checkRateLimitAndThrowError", () => {
 
     await expect(checkRateLimitAndThrowError({ rateLimitingType, identifier })).resolves.not.toThrow();
   });
+  it("should not display negative seconds when reset is in the past", async () => {
+    process.env.UNKEY_ROOT_KEY = "unkey_mock";
+
+    vi.mocked(rateLimiter).mockReturnValue(() => {
+      return {
+        limit: 10,
+        remaining: -1,
+        reset: Date.now() - 5000,
+        success: false,
+      } as RatelimitResponse;
+    });
+
+    const identifier = "test-identifier";
+    const rateLimitingType = "core";
+
+    await expect(checkRateLimitAndThrowError({ rateLimitingType, identifier })).rejects.toThrow(
+      "Rate limit exceeded. Try again in 0 seconds."
+    );
+  });
   it("should notthrow even if upstash is not enabled", async () => {
     // returned value when upstash env vars are not set
     vi.mocked(rateLimiter).mockReturnValue(() => {
