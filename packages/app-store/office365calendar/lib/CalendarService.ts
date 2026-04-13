@@ -405,6 +405,8 @@ class Office365CalendarService implements Calendar {
       let responseBatchApi: IBatchResponse = { responses: [] };
       if (typeof responseBody === "string") {
         responseBatchApi = this.handleTextJsonResponseWithHtmlInBody(responseBody);
+      } else {
+        responseBatchApi = responseBody as IBatchResponse;
       }
       let alreadySuccessResponse = [] as ISettledResponse[];
 
