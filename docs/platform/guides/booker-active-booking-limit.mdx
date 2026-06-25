@@ -1,0 +1,41 @@
+---
+title: Booker active booking limit
+description: Restrict how many upcoming bookings a single booker can have for an event type.
+---
+
+The booker active booking limit restricts how many upcoming bookings a single person (booker) can have for a specific event type at the same time. This prevents someone from reserving multiple slots for the same type of event.
+
+## How it works
+
+When you set a booker active booking limit on an event type, the system tracks how many upcoming, accepted bookings each booker has for that event type. Once a booker reaches the limit, they cannot schedule another event of that type until one of their existing bookings is completed or canceled.
+
+The limit is applied **per event type** — a booker's bookings for one event type do not count toward the limit on a different event type.
+
+## What counts toward the limit
+
+Only **future bookings** with an **accepted** status count toward the active booking limit. The following do not count:
+
+- **Canceled bookings** — once a booking is canceled, it no longer counts toward the limit.
+- **Past bookings** — bookings whose start time has already passed are not counted.
+
+## Offer to reschedule
+
+When enabling the booker active booking limit, you can optionally allow bookers to reschedule their last active booking to the new time slot when the limit is reached, instead of blocking the booking entirely.
+
+## Setting the limit via API
+
+You can configure the booker active booking limit when creating or updating an event type through the API by including the `bookerActiveBookingsLimit` field:
+
+```json
+{
+  "bookerActiveBookingsLimit": {
+    "maximumActiveBookings": 3,
+    "offerReschedule": true
+  }
+}
+```
+
+- `maximumActiveBookings` — the maximum number of active upcoming bookings a booker can have for this event type. Must be at least 1.
+- `offerReschedule` — when `true`, bookers who have reached the limit are offered the option to reschedule their last booking to the new time slot.
+
+<Note>The booker active booking limit is not supported on recurring event types.</Note>
