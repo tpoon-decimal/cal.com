@@ -1,0 +1,109 @@
+---
+title: Booker Active Booking Limit
+description: Understanding and troubleshooting the maximum active bookings limit per booker for event types.
+---
+
+## What is the Booker Active Booking Limit?
+
+The Booker Active Booking Limit is a per-event-type setting that restricts how many upcoming bookings a single attendee (booker) can have scheduled at the same time for a specific event type. This helps event hosts manage their availability and prevent any one person from reserving too many slots.
+
+When enabled, an attendee who has reached the limit will see a **"maximum bookings reached"** error when trying to create another booking for that event type.
+
+<Note>
+  The Booker Active Booking Limit is not supported on recurring event types. If your event type has recurrence enabled, this setting cannot be used.
+</Note>
+
+## How the Limit Works
+
+The system counts bookings that meet **all** of these criteria:
+
+- **Status is "Accepted"** — cancelled, rejected, or pending bookings are not counted
+- **Start time is in the future** — past bookings do not count toward the limit
+- **Attendee email matches** — the count is based on the booker's email address
+
+Once the number of matching bookings reaches the configured limit, the system prevents the booker from creating additional bookings for that event type.
+
+**Important**: The limit is specific to each event type. If you have bookings for multiple event types, each type has its own separate limit. Reaching the limit on one event type does not affect your ability to book other event types.
+
+## Configuring the Limit
+
+### In the Cal.com Dashboard
+
+1. Navigate to **Event Types** and select the event type you want to configure
+2. Go to the **Limits** tab
+3. Find the **Limit upcoming bookings per booker** toggle and enable it
+4. Enter the maximum number of active bookings allowed (minimum of 1)
+5. Optionally, enable **Offer to reschedule the last booking** — when checked, bookers who reach the limit will be offered the option to reschedule their most recent booking to the new time slot instead of being blocked entirely
+
+### Via the API
+
+When creating or updating an event type through the API, use the `bookerActiveBookingsLimit` field:
+
+```json
+{
+  "bookerActiveBookingsLimit": {
+    "maximumActiveBookings": 3,
+    "offerReschedule": true
+  }
+}
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `maximumActiveBookings` | number | The maximum number of active bookings a booker can have for this event type. Minimum value is 1. |
+| `offerReschedule` | boolean | Whether to offer rescheduling the last active booking to the chosen time slot when the limit is reached. |
+
+## Troubleshooting "Maximum Bookings Reached" Errors
+
+If you are seeing a "maximum bookings reached" error when trying to book an event, the following sections explain common causes and how to resolve them.
+
+### 1. Verify Your Active Bookings
+
+You may have other upcoming bookings for the same event type that you are not aware of. To check:
+
+1. Go to your **Bookings** page
+2. Look for bookings with **Accepted** status
+3. Filter by the specific event type you are trying to book
+4. Confirm which bookings are upcoming (scheduled in the future)
+
+Only future bookings with an "Accepted" status count toward the limit.
+
+### 2. Cancellation Did Not Fully Process
+
+If you recently cancelled a booking but are still seeing the error, the cancellation may not have completed successfully. This can happen if:
+
+- There was a network interruption during cancellation
+- The cancellation request timed out
+- The page was closed before the cancellation finished
+
+**Solution**: Check your bookings list to confirm the booking shows a **Cancelled** status. If it still shows as **Accepted**, try cancelling it again.
+
+### 3. Cancelled a Booking for a Different Event Type
+
+Remember that the limit is per event type. The booking you cancelled might have been for a different event type than the one you are now trying to book.
+
+**Solution**: Verify that the booking you cancelled belongs to the same event type as the one you are attempting to book.
+
+### 4. Browser Cache Showing Outdated Information
+
+Your browser may be displaying outdated booking status information.
+
+**Solution**: Try these steps in order:
+
+1. Refresh the booking page
+2. Clear your browser cache
+3. Open the page in an incognito or private browsing window
+4. Try a different browser
+
+### 5. Use the Reschedule Option
+
+If the event host has enabled the **Offer to reschedule** option and you have reached the limit, you may be presented with the option to reschedule your most recent booking to the new time slot. This lets you change the time without needing to manually cancel first.
+
+## When to Contact Support
+
+If you have tried all of the above steps and the error persists, contact support with the following information:
+
+- The name of the event type you are trying to book
+- The email address you are using to book
+- Screenshots showing your active bookings list for that event type
+- The booking ID of any recently cancelled booking (if applicable)
