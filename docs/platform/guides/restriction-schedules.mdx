@@ -1,0 +1,50 @@
+---
+title: "Restriction Schedules"
+description: "Learn how restriction schedules add an additional layer of booking controls on top of regular availability."
+---
+
+# Restriction Schedules
+
+Restriction schedules allow you to add an additional layer of booking controls on top of your regular availability schedule. While your availability schedule defines when you are available to meet, a restriction schedule further limits which of those available times can actually be booked.
+
+## How Restriction Schedules Work
+
+Restriction schedules act as a policy-based filter that narrows your availability to a smaller window. For example:
+
+- If your availability is set to **7:00 AM – 6:00 PM**
+- And your restriction schedule is set to **8:00 AM – 5:00 PM**
+- Only **8:00 AM – 5:00 PM** slots will be bookable
+
+This is useful when you want to maintain broad availability in your calendar but restrict certain event types to specific booking windows.
+
+## Configuring a Restriction Schedule
+
+To add a restriction schedule to an event type:
+
+1. Go to your **Event Type** settings.
+2. Navigate to the **Availability** tab.
+3. Enable the **Add Restriction Schedule** toggle.
+4. Select or configure the restriction schedule with the hours during which bookings should be allowed.
+5. Save your changes.
+
+## Timezone Settings
+
+Restriction schedules include a **Use Booker Timezone** option that determines how the restriction is applied:
+
+- **Disabled (default):** The restriction is applied using the timezone configured in the restriction schedule itself. Times are evaluated based on the schedule owner's timezone.
+- **Enabled:** The restriction is applied in the booker's local timezone. The same clock hours (for example, 9:00 AM – 5:00 PM) are enforced regardless of the booker's timezone.
+
+Timezone mismatches between the restriction schedule and the booker can cause slots that appear valid to be rejected. If bookings are unexpectedly failing, verify the timezone settings on your restriction schedule.
+
+## Restriction Schedules vs. Availability Schedules
+
+Availability schedules and restriction schedules are separate features:
+
+| Feature | Purpose |
+|---------|---------|
+| **Availability Schedule** | Defines when you are available to meet |
+| **Restriction Schedule** | Further limits which available times can be booked |
+
+A restriction schedule can only narrow availability — it cannot extend it beyond your configured availability hours.
+
+If you do not need the additional restriction layer, you can disable it by toggling off **Add Restriction Schedule** in your event type's Availability tab.
