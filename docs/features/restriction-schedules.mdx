@@ -1,0 +1,80 @@
+---
+title: "Restriction Schedules"
+description: "Learn how Restriction Schedules provide an additional layer of booking control on top of your regular availability settings."
+---
+
+# Restriction Schedules
+
+Restriction Schedules are an advanced feature that provides an additional layer of booking control on top of your regular availability settings. While your availability schedule defines when you are generally available for meetings, a Restriction Schedule further limits those available times based on organizational policies or specific booking rules.
+
+## How Restriction Schedules Work
+
+Restriction Schedules act as a filter that "clips" your availability to a narrower window. For example:
+
+- If your **availability** is set to 7am–6pm
+- And your **restriction schedule** is set to 8am–5pm
+- Then only the **8am–5pm** time slots will be bookable
+
+The restriction schedule takes precedence and removes any slots that fall outside its configured window, even if you are technically available during those times.
+
+## Restriction Schedule vs Availability Schedule
+
+It is important to understand the difference between these two features:
+
+| Feature | Purpose |
+|---------|---------|
+| **Availability Schedule** | Defines your general working hours and when you are available for meetings |
+| **Restriction Schedule** | Applies additional policy-based limits on top of availability, often used for team-wide booking rules |
+
+Both must align for a time slot to be bookable. A booking time must fall within your availability **and** within the restriction schedule if one is configured.
+
+## Configuring a Restriction Schedule
+
+To manage restriction schedules for an event type:
+
+1. Go to your **Event Type** settings.
+2. Open the **Availability** tab.
+3. Look for the **Add Restriction Schedule** toggle.
+4. If enabled, select or configure the restriction schedule.
+5. Set the hours during which bookings should be allowed.
+6. Configure the timezone settings as needed.
+
+## Understanding the "Use Booker Timezone" Setting
+
+Restriction Schedules include a **Use Booker Timezone** option that changes how the restriction is applied:
+
+- **Disabled (default):** The restriction is applied using the restriction schedule's own configured timezone. A 9am–5pm restriction means 9am–5pm in that specific timezone.
+- **Enabled:** The restriction is applied using the booker's local timezone. A 9am–5pm restriction means 9am–5pm in whatever timezone the person booking is located in.
+
+This setting can significantly affect which slots appear as available, especially for users booking across different time zones.
+
+## "Not Allowed by Restriction Schedule" Errors
+
+If you or your bookers encounter a "Not allowed by restriction schedule" message when trying to book at times that appear available, check the following:
+
+### Check if a Restriction Schedule Is Configured
+
+Navigate to your event type's Availability tab and check whether **Add Restriction Schedule** is enabled. If you do not need this additional filtering, you can disable it.
+
+### Verify the Restriction Hours
+
+If a restriction schedule is enabled, make sure its hours cover your intended booking window. The restriction may be narrower than your availability.
+
+### Review Timezone Settings
+
+Timezone mismatches are a common cause of unexpected booking failures. Verify:
+
+- The timezone configured on the restriction schedule itself
+- Whether **Use Booker Timezone** is enabled
+- The timezone of the person attempting to book
+
+A 4pm booking might be valid in one timezone but fall outside the restriction window in another.
+
+## Common Use Cases
+
+Restriction Schedules are useful for:
+
+- **Team event types:** Apply organization-wide booking policies across all team members.
+- **Business hours enforcement:** Ensure bookings only occur during official business hours regardless of individual availability.
+- **Regional restrictions:** Limit bookings to specific hours appropriate for your target audience's timezone.
+- **Compliance requirements:** Enforce booking windows required by company policies.
