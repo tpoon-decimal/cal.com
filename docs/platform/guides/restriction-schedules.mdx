@@ -1,0 +1,56 @@
+---
+title: "Restriction Schedules"
+description: "Learn how Restriction Schedules add an additional layer of availability constraints to event types."
+---
+
+# Restriction Schedules
+
+A Restriction Schedule is an advanced availability feature that allows you to add an additional layer of constraints on when bookings can be made for a specific event type. It operates separately from your regular availability schedule.
+
+## How Restriction Schedules Work
+
+When a Restriction Schedule is configured on an event type, the available booking slots are determined by the **intersection** of:
+
+1. Your regular availability schedule (e.g., 9am–5pm)
+2. The Restriction Schedule's allowed times
+
+This means a time slot must fall within **both** schedules to be bookable. If either schedule blocks a time, that slot will not be available.
+
+### Example
+
+If your regular availability is **9am–5pm** and your Restriction Schedule allows bookings only between **10am–3pm**, then only slots between **10am–3pm** will be available to bookers.
+
+## Timezone Considerations
+
+Restriction Schedules have specific timezone behavior that can affect which slots are available:
+
+- **Schedule's timezone**: By default, the restriction schedule is evaluated in the schedule's own timezone.
+- **Booker's timezone**: When configured to use the booker's timezone, the restrictions are applied based on the booker's local time.
+
+This timezone setting can cause slots that appear available in one timezone to be blocked in another. For example, if your restriction schedule is set to 10am–4pm in UTC and a booker is in a timezone that's UTC+4, the available hours will shift accordingly.
+
+## Configuring Restriction Schedules
+
+To view or modify a Restriction Schedule:
+
+1. Go to your **Event Type** settings.
+2. Look for the **Restriction Schedule** option in the availability section.
+3. Review or adjust the schedule's hours and timezone settings.
+4. Save your changes.
+
+To remove restrictions, unlink the restriction schedule from your event type.
+
+<Note>
+  The Restriction Schedule feature may need to be enabled for your account. If you don't see this option, contact support for assistance.
+</Note>
+
+## "Not allowed by restriction schedule" Error
+
+If you or your bookers encounter a **"Not allowed by restriction schedule"** error, it means the requested booking time falls outside the allowed hours defined by the Restriction Schedule — even if it appears to be within your regular availability.
+
+To resolve this:
+
+1. Check if a Restriction Schedule is configured on the event type.
+2. Review the Restriction Schedule's hours and compare them to your regular availability.
+3. Verify the timezone settings match your intended availability.
+4. Either adjust the Restriction Schedule hours or remove it if it is not needed.
